@@ -8,6 +8,11 @@ function handleNewUserRequest(req, res) {
 	res.status(200).send("Ok")
 }
 
+function handleUnknownRequest (req, res) {
+	console.log("Got unknown request")
+	res.status(404).send("Not Ok")
+}
+
 app.get('/', function (req, res) {
 	res.set({
 		'Content-Type': 'text/plain'
@@ -17,6 +22,7 @@ app.get('/', function (req, res) {
 })
 
 app.post('/user', handleNewUserRequest)
+app.all('*', handleUnknownRequest)
 
 const server = app.listen(port, function () {
 	console.log("Server listening on port " + port)
