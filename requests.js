@@ -1,8 +1,10 @@
 var exports = {}
 
 function handleNewUserRequest(req, res) {
+	let pk = req.body.pk
+	let timestamp = Date().timestamp
 	// TODO: Implement!!
-	console.log("Got new user request")
+	console.log("Got new user request with pk=" + pk + " and timestamp=" + timestamp)
 	res.status(200).send("Ok")
 }
 

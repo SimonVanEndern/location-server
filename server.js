@@ -4,6 +4,8 @@ const port = 8888
 
 const RequestHandling = require('./requests')
 
+app.use(express.json({"type": "application/json"}))
+
 app.get('/', RequestHandling.handleBasicGetRequest)
 app.get('/info', RequestHandling.sendAPIInfo)
 app.get('/aggregations', RequestHandling.sendAggregations)
