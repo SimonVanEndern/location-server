@@ -73,14 +73,23 @@ function handleForwardRequest (req, res) {
 
 function sendRequests (req, res) {
 	console.log("Got get requests request")
-	let exampleRequests = {'requests' : [
+	/*let exampleRequests = {'requests' : [
 		{'id': 1, 'data': 'binarydataEncrypted...'}, 
 		{'id':2, 'data':'binarydataEncrypted'}
-	]}
-	res.set({
-		'Content-Type' : "text/json"
-	})
-	res.status(200).send(exampleRequests)
+	]}*/
+	let pk = req.query.pk
+	if (pk == undefined) {
+		res.status(400).send("Not ok")
+	} else {
+		Repository.getRequests(pk, function (result, err) {
+			if (err) throw err
+			res.set({
+				'Content-Type' : "text/json"
+			})
+			res.status(200).send(result)
+
+		})
+	}
 }
 
 exports.handleNewUserRequest = handleNewUserRequest

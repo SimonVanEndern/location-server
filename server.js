@@ -1,8 +1,11 @@
 const express = require('express')
 const app = express()
 const port = 8888
-
+const Repository = require('./repository')
 const RequestHandling = require('./requests')
+
+// Populate database with sample data for pk = "xyz"
+Repository.insertSampleAggregationRequest()
 
 app.use(express.json({"type": "application/json"}))
 
