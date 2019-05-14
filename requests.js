@@ -35,10 +35,14 @@ function sendAPIInfo (req, res) {
 }
 
 function sendAggregations (req, res) {
-	res.set({
-		'Content-Type': 'text/json'
+	Repository.getResults().then(result => {
+		res.set({
+			'Content-Type': 'text/json'
+		})
+		res.status(200).send(result)
+	}).catch(error => {
+		throw err
 	})
-	res.status(200).send("List of all aggregations as json")
 }
 
 function sendStatistics (req, res) {
@@ -51,9 +55,11 @@ function sendStatistics (req, res) {
 function handleAggregationResult (req, res) {
 	let pk = req.body.pk
 	let original_request_id = req.body.original_request_id
-	if (pk == undefined || original_request_id == undefined) {
+	let data = req.body.data
+	if (pk == undefined || original_request_id == undefined || data == undefined) {
 		res.status(400).send("Not Ok")
 	} else {
+		Repository.insertNewAggregationAndDeleteRequest(original_request_id, data)
 		console.log("Got aggregation result: pk=" + pk + " original_request_id=" + original_request_id)
 		res.status(200).end()	
 	}
@@ -65,11 +71,6 @@ function handleForwardRequest (req, res) {
 	let original_request_id = req.body.original_request_id
 	let data = req.body.data
 	if (pk == undefined || target == undefined || original_request_id == undefined || data == undefined) {
-		console.log("here")
-		console.log(pk)
-		console.log(target)
-		console.log(data)
-		console.log(original_request_id)
 		res.status(400).send("Not Ok")
 	} else {
 		Repository.insertNewRequestAndDeleteOld(target, data, original_request_id)
@@ -99,6 +100,17 @@ function sendRequests (req, res) {
 	}
 }
 
+function handleInsertSample (req, res) {
+	//TODO: Restrict to admin only
+	pk = req.body.pk
+	if (pk == undefined) {
+		res.status(400).send("Not ok")
+	} else {
+		Repository.insertSampleAggregationRequest(pk)
+		res.status(200).send("Ok")
+	}
+}
+
 exports.handleNewUserRequest = handleNewUserRequest
 exports.handleUnknownRequest = handleUnknownRequest
 exports.handleBasicGetRequest = handleBasicGetRequest
@@ -108,5 +120,5 @@ exports.sendStatistics = sendStatistics
 exports.handleAggregationResult = handleAggregationResult
 exports.handleForwardRequest = handleForwardRequest
 exports.sendRequests = sendRequests
-
+exports.handleInsertSample = handleInsertSample
 module.exports = exports
