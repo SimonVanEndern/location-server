@@ -2,6 +2,10 @@ var exports = {}
 
 function handleNewUserRequest(req, res) {
 	let pk = req.body.pk
+	if (pk == undefined) {
+		res.status(400).send("Not ok")
+		return
+	}
 	let timestamp = (new Date()).getTime()
 	// TODO: Implement!!
 	console.log("Got new user request with pk=" + pk + " and timestamp=" + timestamp)
