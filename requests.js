@@ -2,14 +2,14 @@ var exports = {}
 
 function handleNewUserRequest(req, res) {
 	let pk = req.body.pk
-	if (pk == undefined) {
+	if (pk == undefined || pk == "" || pk == null || pk == undefined) {
 		res.status(400).send("Not ok")
-		return
+	} else {
+		let timestamp = (new Date()).getTime()
+		// TODO: Implement!!
+		console.log("Got new user request with pk=" + pk + " and timestamp=" + timestamp)
+		res.status(200).send("Ok")
 	}
-	let timestamp = (new Date()).getTime()
-	// TODO: Implement!!
-	console.log("Got new user request with pk=" + pk + " and timestamp=" + timestamp)
-	res.status(200).send("Ok")
 }
 
 function handleUnknownRequest (req, res) {
