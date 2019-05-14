@@ -18,7 +18,7 @@ function handleBasicGetRequest (req, res) {
 		'Content-Type': 'text/plain'
 	})
 	res.status(200)
-		.send("Hello world")
+	.send("Hello world")
 }
 
 function sendAPIInfo (req, res) {
@@ -52,6 +52,18 @@ function handleForwardRequest (req, res) {
 	res.status(200).end()
 }
 
+function sendRequests (req, res) {
+	console.log("Got get requests request")
+	let exampleRequests = {'requests' : [
+		{'id': 1, 'data': 'binarydataEncrypted...'}, 
+		{'id':2, 'data':'binarydataEncrypted'}
+	]}
+	res.set({
+		'Content-Type' : "text/json"
+	})
+	res.status(200).send(exampleRequests)
+}
+
 exports.handleNewUserRequest = handleNewUserRequest
 exports.handleUnknownRequest = handleUnknownRequest
 exports.handleBasicGetRequest = handleBasicGetRequest
@@ -60,5 +72,6 @@ exports.sendAggregations = sendAggregations
 exports.sendStatistics = sendStatistics
 exports.handleAggregationResult = handleAggregationResult
 exports.handleForwardRequest = handleForwardRequest
+exports.sendRequests = sendRequests
 
 module.exports = exports
