@@ -63,9 +63,16 @@ function handleForwardRequest (req, res) {
 	let pk = req.body.pk
 	let target = req.body.target
 	let original_request_id = req.body.original_request_id
-	if (pk == undefined || target == undefined || original_request_id == undefined) {
+	let data = req.body.data
+	if (pk == undefined || target == undefined || original_request_id == undefined || data == undefined) {
+		console.log("here")
+		console.log(pk)
+		console.log(target)
+		console.log(data)
+		console.log(original_request_id)
 		res.status(400).send("Not Ok")
 	} else {
+		Repository.insertNewRequestAndDeleteOld(target, data, original_request_id)
 		console.log("Got forward request: target=" + target + " pk=" + pk + " original_request_id=" + original_request_id)
 		res.status(200).end()
 	}
@@ -81,14 +88,14 @@ function sendRequests (req, res) {
 	if (pk == undefined) {
 		res.status(400).send("Not ok")
 	} else {
-		Repository.getRequests(pk, function (result, err) {
-			if (err) throw err
-			res.set({
-				'Content-Type' : "text/json"
-			})
-			res.status(200).send(result)
-
-		})
+		Repository.getRequests(pk).then(
+			result => {
+				res.set({
+					'Content-Type' : "text/json"
+				})
+				res.status(200).send(result)
+			}
+		).catch(error => {throw err})
 	}
 }
 
