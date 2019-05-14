@@ -47,8 +47,14 @@ function sendStatistics (req, res) {
 }
 
 function handleAggregationResult (req, res) {
-	console.log("Got aggregation result")
-	res.status(200).end()
+	let pk = req.body.pk
+	let original_request_id = req.body.original_request_id
+	if (pk == undefined || original_request_id == undefined) {
+		res.status(400).send("Not Ok")
+	} else {
+		console.log("Got aggregation result: pk=" + pk + " original_request_id=" + original_request_id)
+		res.status(200).end()	
+	}
 }
 
 function handleForwardRequest (req, res) {
