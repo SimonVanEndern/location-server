@@ -52,8 +52,15 @@ function handleAggregationResult (req, res) {
 }
 
 function handleForwardRequest (req, res) {
-	console.log("Got forward request")
-	res.status(200).end()
+	let pk = req.body.pk
+	let target = req.body.target
+	let original_request_id = req.body.original_request_id
+	if (pk == undefined || target == undefined || original_request_id == undefined) {
+		res.status(400).send("Not Ok")
+	} else {
+		console.log("Got forward request: target=" + target + " pk=" + pk + " original_request_id=" + original_request_id)
+		res.status(200).end()
+	}
 }
 
 function sendRequests (req, res) {
