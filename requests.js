@@ -1,26 +1,5 @@
 var exports = {}
-const mongo = require('mongodb')
-const url = "mongodb://localhost:27017/"
-const mongoClient = mongo.MongoClient
-
-function insertNewUser(pk) {
-	 mongoClient.connect(url, {"useNewUrlParser":true}, function (err, db) {
-	 	if (err) {
-	 		throw err
-	 	} else {
-	 		let app = db.db("app")
-	 		let user = {"pk": pk, "lastSignal": (new Date()).getTime()}
-	 		app.collection("users").insertOne(user, function (err, res) {
-	 			if (err) {
-	 				throw err
-	 			} else {
-	 				console.log("Inserted new user with pk=" + pk + " and id=" + res.insertedId)
-	 				db.close()
-	 			}
-	 		})
-	 	}
-	 })
-}
+const Repository = require('./repository')
 
 function handleNewUserRequest(req, res) {
 	let pk = req.body.pk
@@ -30,7 +9,7 @@ function handleNewUserRequest(req, res) {
 		let timestamp = (new Date()).getTime()
 		// TODO: Implement!!
 		console.log("Got new user request with pk=" + pk + " and timestamp=" + timestamp)
-		insertNewUser(pk)
+		Repository.insertNewUser(pk)
 		res.status(200).send("Ok")
 	}
 }
