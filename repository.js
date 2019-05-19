@@ -1,7 +1,8 @@
 var exports = {}
 
 const mongo = require('mongodb')
-const url = "mongodb://localhost:27017/"
+const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
+"mongodb://localhost:27017/"
 const mongoClient = mongo.MongoClient
 
 function insertNewUser(pk) {
@@ -23,18 +24,21 @@ function insertNewUser(pk) {
 	 })
 }
 
-function insertSampleAggregationRequest (pk) {
+function insertSampleAggregationRequest (request) {
 	mongoClient.connect(url, {"useNewUrlParser":true}, function (err, db) {
 		if (err) {
+			console.log("Error in connecting ...")
 			throw err
 		} else {
 			let app = db.db("app")
-			let aggregationRequest = {"pk": pk, "data": "01000101010101"}
-			app.collection("aggregationRequests").insertOne(aggregationRequest, function (err, res) {
+			//let aggregationRequest = {"pk": pk, "data": "01000101010101"}
+			console.log(request)
+			app.collection("aggregationRequests").insertOne(request, function (err, res) {
 				if (err) {
+					console.log("Error in inserting one")
 					throw err
 				} else {
-					console.log("Inserted sample aggregation with pk=" + aggregationRequest.pk + " and id=" + res.insertedId)
+					console.log("Inserted sample aggregation with pk=" + request.pk + " and id=" + res.insertedId)
 					db.close()
 				}
 			})
@@ -51,10 +55,19 @@ function getRequests(pk) {
 				} else {
 					let app = db.db("app")
 					let query = {"pk":pk}
+					console.log("Query: ")
+					console.log(query)
 					app.collection("aggregationRequests").find(query).toArray(function (err, result) {
 						if (err) {
 							throw err
 						} else {
+							//TODO: Correct implementation
+							for (entry of result) {
+								entry.nextUser = "ForNextUserTest"
+								entry.serverId = entry._id
+							}
+
+							console.log("Found requests: ")
 							console.log(result)
 							resolve(result)
 							db.close()
@@ -98,15 +111,17 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 			throw err
 		} else {
 			let app = db.db("app")
-			let request = {"pk":pk, "data":data}
+			//let request = {"pk":pk, "data":data}
 			app.collection("aggregationRequests").findOne({"_id": mongo.ObjectId(original_request_id)}, function (err, res) {
 				if (err) {
 					throw err
 				} else {
 					if (res == null) {
+						console.log("No document for request id: " + original_request_id)
 						return
 					} else {
-						app.collection("aggregationRequests").insertOne(request, function (err, res) {
+						console.log("Document exists...")
+						app.collection("aggregationRequests").insertOne(data, function (err, res) {
 							if (err) {
 								throw err
 							} else {

@@ -1,0 +1,5 @@
+---
+applications:
+ - name: privacy-research
+   random-route: true
+   memory: 64M

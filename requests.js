@@ -10,7 +10,7 @@ function handleNewUserRequest(req, res) {
 		// TODO: Implement!!
 		console.log("Got new user request with pk=" + pk + " and timestamp=" + timestamp)
 		Repository.insertNewUser(pk)
-		res.status(200).send("Ok")
+		res.status(200).json({"status":true})
 	}
 }
 
@@ -66,15 +66,20 @@ function handleAggregationResult (req, res) {
 }
 
 function handleForwardRequest (req, res) {
+	console.log("Got forward request")
+	console.log(req.body)
 	let pk = req.body.pk
-	let target = req.body.target
-	let original_request_id = req.body.original_request_id
+	let target = req.body.nextUser
+	let original_request_id = req.body.serverId
 	let data = req.body.data
-	if (pk == undefined || target == undefined || original_request_id == undefined || data == undefined) {
+
+	// TODO: Re-voke user authentication!!!
+	if (target == undefined || original_request_id == undefined) {
+		console.log("Sending 400 to foward request")
 		res.status(400).send("Not Ok")
 	} else {
-		Repository.insertNewRequestAndDeleteOld(target, data, original_request_id)
 		console.log("Got forward request: target=" + target + " pk=" + pk + " original_request_id=" + original_request_id)
+		Repository.insertNewRequestAndDeleteOld(target, req.body, original_request_id)
 		res.status(200).end()
 	}
 }
@@ -103,10 +108,12 @@ function sendRequests (req, res) {
 function handleInsertSample (req, res) {
 	//TODO: Restrict to admin only
 	pk = req.body.pk
+	request = req.body.request
+	request.pk = pk
 	if (pk == undefined) {
 		res.status(400).send("Not ok")
 	} else {
-		Repository.insertSampleAggregationRequest(pk)
+		Repository.insertSampleAggregationRequest(request)
 		res.status(200).send("Ok")
 	}
 }

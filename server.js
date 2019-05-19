@@ -1,6 +1,7 @@
 const express = require('express')
 const app = express()
 const port = 8888
+app.set('port', process.env.PORT || port);
 const Repository = require('./repository')
 const RequestHandling = require('./requests')
 
@@ -20,6 +21,6 @@ app.post('/forward', RequestHandling.handleForwardRequest)
 app.post('/admin/sampleRequest', RequestHandling.handleInsertSample)
 app.all('*', RequestHandling.handleUnknownRequest)
 
-const server = app.listen(port, function () {
+const server = app.listen(app.get('port'), function () {
 	console.log("Server listening on port " + port)
 })
