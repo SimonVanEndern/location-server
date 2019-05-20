@@ -19,6 +19,19 @@ function handleUnknownRequest (req, res) {
 	res.status(404).send("Not Ok")
 }
 
+function testing(req, res) {
+	console.log("Testing ...")
+	let promise = Repository.getUsersPossibleForNewRequest()
+	promise.then(result => {
+		console.log("ok")
+		res.status(400).end()
+	}).catch(error => {
+		console.log("err")
+		res.status(400).end()
+	})
+	console.log("... Testing ended.")
+}
+
 function handleBasicGetRequest (req, res) {
 	res.set({
 		'Content-Type': 'text/plain'
@@ -109,6 +122,10 @@ function handleInsertSample (req, res) {
 	//TODO: Restrict to admin only
 	pk = req.body.pk
 	request = req.body.request
+	if (!request) {
+		res.status(400).send("Not ok")
+		return
+	}
 	request.pk = pk
 	if (pk == undefined) {
 		res.status(400).send("Not ok")
@@ -116,6 +133,10 @@ function handleInsertSample (req, res) {
 		Repository.insertSampleAggregationRequest(request)
 		res.status(200).send("Ok")
 	}
+}
+
+function updateUserTimestamp (pk) {
+	Repository.updateUserTimestamp(pk)
 }
 
 exports.handleNewUserRequest = handleNewUserRequest
@@ -128,4 +149,7 @@ exports.handleAggregationResult = handleAggregationResult
 exports.handleForwardRequest = handleForwardRequest
 exports.sendRequests = sendRequests
 exports.handleInsertSample = handleInsertSample
+exports.testing = testing
+exports.updateUserTimestamp = updateUserTimestamp
+
 module.exports = exports

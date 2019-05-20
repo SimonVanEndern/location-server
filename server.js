@@ -10,6 +10,22 @@ const RequestHandling = require('./requests')
 
 app.use(express.json({"type": "application/json"}))
 
+app.use(function (req, res, next) {
+	if (req.method === "POST") {
+		if (!req.body.pk) {
+			console.log("WARNING: No user specified")
+		} else {
+			RequestHandling.updateUserTimestamp(req.body.pk)
+		}
+	} else if (req.method === "GET") {
+		if (!req.query.pk) {
+			console.log("WARNING: No user specified")
+		} else {
+			RequestHandling.updateUserTimestamp(req.query.pk)
+		}
+	}
+	next()
+})
 app.get('/', RequestHandling.handleBasicGetRequest)
 app.get('/info', RequestHandling.sendAPIInfo)
 app.get('/aggregations', RequestHandling.sendAggregations)
@@ -19,6 +35,7 @@ app.post('/user', RequestHandling.handleNewUserRequest)
 app.post('/aggregation', RequestHandling.handleAggregationResult)
 app.post('/forward', RequestHandling.handleForwardRequest)
 app.post('/admin/sampleRequest', RequestHandling.handleInsertSample)
+app.get('/test', RequestHandling.testing)
 app.all('*', RequestHandling.handleUnknownRequest)
 
 const server = app.listen(app.get('port'), function () {

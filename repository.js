@@ -11,13 +11,21 @@ function insertNewUser(pk) {
 	 		throw err
 	 	} else {
 	 		let app = db.db("app")
-	 		let user = {"pk": pk, "lastSignal": (new Date()).getTime()}
-	 		app.collection("users").insertOne(user, function (err, res) {
-	 			if (err) {
-	 				throw err
+	 		app.collection("users").findOne({"pk":pk}, function (err, res) {
+	 			if (!res) {
+	 				console.log(res)
+			 		let user = {"pk": pk, "lastSignal": (new Date()).getTime()}
+			 		app.collection("users").insertOne(user, function (err, res) {
+			 			if (err) {
+			 				throw err
+			 			} else {
+			 				console.log("Inserted new user with pk=" + pk + " and id=" + res.insertedId)
+			 				db.close()
+			 			}
+			 		})
+
 	 			} else {
-	 				console.log("Inserted new user with pk=" + pk + " and id=" + res.insertedId)
-	 				db.close()
+	 				console.log (`User ${pk} already present`)
 	 			}
 	 		})
 	 	}
@@ -33,14 +41,21 @@ function insertSampleAggregationRequest (request) {
 			let app = db.db("app")
 			//let aggregationRequest = {"pk": pk, "data": "01000101010101"}
 			console.log(request)
-			app.collection("aggregationRequests").insertOne(request, function (err, res) {
-				if (err) {
-					console.log("Error in inserting one")
-					throw err
-				} else {
-					console.log("Inserted sample aggregation with pk=" + request.pk + " and id=" + res.insertedId)
-					db.close()
-				}
+			getUsersPossibleForNewRequest().then(users => {
+				request.pk = users.shift()
+				request.nextUser = request.pk
+				request.users = users
+				app.collection("aggregationRequests").insertOne(request, function (err, res) {
+					if (err) {
+						console.log("Error in inserting one")
+						throw err
+					} else {
+						console.log("Inserted sample aggregation with pk=" + request.pk + " and id=" + res.insertedId)
+						db.close()
+					}
+				})
+			}).catch(err => {
+				console.log("Could not create aggregation request. Could not retrieve possible users")
 			})
 		}
 	})
@@ -63,7 +78,7 @@ function getRequests(pk) {
 						} else {
 							//TODO: Correct implementation
 							for (entry of result) {
-								entry.nextUser = "ForNextUserTest"
+								//entry.nextUser = "ForNextUserTest"
 								entry.serverId = entry._id
 							}
 
@@ -105,6 +120,34 @@ function getResults() {
 	return getRequests()
 }
 
+function getUsersPossibleForNewRequest () {
+	let getUsers = () => {
+		return new Promise((resolve, reject) => {
+			mongoClient.connect(url, {"useNewUrlParser":true}, function (err, db) {
+				if (err) {
+					reject(err)
+				} else {
+					let app = db.db("app")
+					let oneDay = (new Date()).getTime() - 1000 * 60 * 60 * 24
+					let query = {"lastSignal": {$gt : oneDay}}
+					app.collection("users").find(query).toArray(function (err, result) {
+						if (err) {
+							reject(err)
+						} else {
+							result = result.map(function (ele) {return ele.pk})
+							result.length = result.length > 10 ? 10 : result.length
+							console.log(result)
+							resolve(result)
+							db.close()
+						}
+					})
+				}
+			})
+		})
+	}
+	return getUsers()
+}
+
 function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 	mongoClient.connect(url, {"useNewUrlParser":true}, function (err, db) {
 		if (err) {
@@ -121,6 +164,9 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 						return
 					} else {
 						console.log("Document exists...")
+						data.pk = data.nextUser
+						data.nextUser = res.users.shift()
+						data.users = res.users
 						app.collection("aggregationRequests").insertOne(data, function (err, res) {
 							if (err) {
 								throw err
@@ -171,11 +217,32 @@ function insertNewAggregationAndDeleteRequest (original_request_id, data) {
 	})
 }
 
+function updateUserTimestamp (pk) {
+	mongoClient.connect(url, {"useNewUrlParser": true}, function (err, db) {
+		if (err) {
+			throw err
+		} else {
+			let app = db.db("app")
+			let query = {"pk": pk}
+			let update = {$set: { "lastSignal": (new Date()).getTime()}}
+			app.collection("users").updateOne(query, update, function (err, res) {
+				if (err) {
+					throw err
+				} else {
+					console.log("updated user " + pk)
+				}
+			})
+		}
+	})
+}
+
 exports.insertNewUser = insertNewUser
 exports.insertSampleAggregationRequest = insertSampleAggregationRequest
 exports.getRequests = getRequests
 exports.insertNewRequestAndDeleteOld = insertNewRequestAndDeleteOld
 exports.insertNewAggregationAndDeleteRequest = insertNewAggregationAndDeleteRequest
 exports.getResults = getResults
+exports.getUsersPossibleForNewRequest = getUsersPossibleForNewRequest
+exports.updateUserTimestamp = updateUserTimestamp
 
 module.exports = exports
