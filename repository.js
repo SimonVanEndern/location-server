@@ -88,7 +88,8 @@ function insertSampleAggregationRequest (request, callback) {
 					} else {
 						console.log("Inserted sample aggregation with pk=" + request.pk + " and id=" + res.insertedId)
 						db.close()
-						callback(true)
+						console.log(res.ops[0])
+						callback(true, res.ops[0])
 					}
 				})
 			}).catch(err => {

@@ -38,15 +38,16 @@ describe('Users', () => {
 	describe('/Post existing user', () => {
 		it('it should POST an existing user and fail', (done) => {
 			let user = {"pk":"testUserUnitTest"}
-			Repository.insertNewUser(user.pk, (success) => {})
-			chai.request(server)
-				.post('/user')
-				.send(user)
-				.end((err, res) => {
-					res.should.have.status(400);
-					res.body.should.have.status(false);
-					done();
-				});
+			Repository.insertNewUser(user.pk, (success) => {
+				chai.request(server)
+					.post('/user')
+					.send(user)
+					.end((err, res) => {
+						res.should.have.status(400);
+						res.body.should.have.status(false);
+						done();
+					});
+			})
 		});
 	});
 });
@@ -72,6 +73,7 @@ describe('Requests', () => {
 				"n": 0,
 				"value": 0.1
 			}
+
 			Repository.insertSampleAggregationRequest(request, (success) => {
 				if (success) {
 					chai.request(server)
@@ -86,6 +88,38 @@ describe('Requests', () => {
 							res.body[0].should.have.property("n", 0)
 							res.body[0].should.have.property("value", 0.1)
 							res.body[0].should.have.property("nextUser", user)
+							done()
+						})
+				} else {
+					throw "Failed to set up test"
+				}
+			})
+		})
+	})
+
+	describe('/POST forward', () => {
+		it('it should POST a request to be forwarded', (done) => {
+			let request = {
+				"start"  : "2019-01-01",
+				"end": "2019-01-02",
+				"type": "steps",
+				"n": 0,
+				"value": 0.1
+			}
+
+			Repository.insertSampleAggregationRequest(request, (success, doc) => {
+				if (success) {
+					request.serverId = doc._id
+					request.nextUser = doc.nextUser
+					request.pk = doc.pk
+					request.n = 3
+					request.value = 3.3
+					chai.request(server)
+						.post('/forward')
+						.send(request)
+						.end((err, res) => {
+							res.should.have.status(200)
+							res.body.should.have.status(true)
 							done()
 						})
 				} else {
