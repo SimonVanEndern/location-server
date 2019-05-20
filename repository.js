@@ -1,6 +1,7 @@
 var exports = {}
 
 const mongo = require('mongodb')
+const crypto = require("crypto")
 const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
 "mongodb://localhost:27017/"
 const mongoClient = mongo.MongoClient
@@ -48,17 +49,18 @@ function insertNewUser(pk, callbackFunction) {
 	 		app.collection("users").findOne({"pk":pk}, function (err, res) {
 	 			if (!res) {
 	 				console.log(res)
+	 				let pw = Math.random().toString(36)
 			 		let user = {
 			 			"pk": pk, 
 			 			"lastSignal": (new Date()).getTime(),
-			 			"pw": Math.random().toString(36)
+						"pw": crypto.createHash("sha256").update(pw).digest()
 			 		}
 			 		app.collection("users").insertOne(user, function (err, res) {
 			 			if (err) {
 			 				throw err
 			 			} else {
 			 				console.log("Inserted new user with pk=" + pk + " and id=" + res.insertedId)
-			 				callbackFunction(true, user.pw)
+			 				callbackFunction(true, pw)
 			 				db.close()
 			 			}
 			 		})

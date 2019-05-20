@@ -115,6 +115,7 @@ describe('Requests', () => {
 					request.serverId = doc._id
 					request.nextUser = doc.nextUser
 					request.pk = doc.pk
+					request.pw = pw
 					request.n = 3
 					request.value = 3.3
 					chai.request(server)

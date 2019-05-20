@@ -1,4 +1,5 @@
 const express = require('express')
+const crypto = require('crypto')
 const app = express()
 const port = 8888
 app.set('port', process.env.PORT || port);
@@ -13,6 +14,7 @@ app.use(express.json({"type": "application/json"}))
 function authenticate (req, res, next) {
 	let user
 	let pw
+
 	if (req.method === "GET") {
 		user = req.query.pk
 		pw = req.query.pw
@@ -20,6 +22,9 @@ function authenticate (req, res, next) {
 		user = req.body.pk
 		pw = req.body.pw
 	}
+
+	pw = crypto.createHash("sha256").update(pw).digest()
+
 	console.log("Try authentication ...")
 
 	Repository.authenticateUser(user, pw, (authenticated) => {
