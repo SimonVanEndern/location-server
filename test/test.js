@@ -6,13 +6,15 @@ let chaiHttp = require('chai-http');
 let server = require('../server');
 let Repository = require('../repository');
 let should = chai.should();
+let expect = chai.expect;
 
 chai.use(chaiHttp);
 //Our parent block
 describe('Users', () => {
     beforeEach((done) => { //Before each test we empty the database
-        Repository.removeAllUsers();
-        done();
+        Repository.removeAllUsers(() => {
+        	done();
+        });
     });        
 /*
   * Test the /GET route
@@ -48,3 +50,48 @@ describe('Users', () => {
 		});
 	});
 });
+
+describe('Requests', () => {
+	let user = "testUserUnitTest"
+	beforeEach((done) => {
+		Repository.removeAllUsers(() => {
+			Repository.insertNewUser(user, (success) => {
+				Repository.deleteAllRequests(() => {
+					done()
+				})
+			})
+		})
+	})
+
+	describe('/GET requests for user', () => {
+		it('it should GET all aggregations for the user', (done) => {
+			let request = {
+				"start"  : "2019-01-01",
+				"end": "2019-01-02",
+				"type": "steps",
+				"n": 0,
+				"value": 0.1
+			}
+			Repository.insertSampleAggregationRequest(request, (success) => {
+				if (success) {
+					chai.request(server)
+						.get('/requests?pk=' + user)
+						.end((err, res) => {
+							res.should.have.status(200)
+							res.body.should.be.a('array')
+							res.body.should.have.lengthOf(1)
+							res.body[0].should.have.property("type", "steps")
+							res.body[0].should.have.property("start", "2019-01-01")
+							res.body[0].should.have.property("end", "2019-01-02")
+							res.body[0].should.have.property("n", 0)
+							res.body[0].should.have.property("value", 0.1)
+							res.body[0].should.have.property("nextUser", user)
+							done()
+						})
+				} else {
+					throw "Failed to set up test"
+				}
+			})
+		})
+	})
+})

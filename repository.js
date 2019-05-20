@@ -6,7 +6,7 @@ const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.
 const mongoClient = mongo.MongoClient
 
 // Only for testing
-function removeAllUsers() {
+function removeAllUsers(callback) {
 	mongoClient.connect(url,{"useNewUrlParser":true}, function (err, db) {
 	 	if (err) {
 	 		throw err
@@ -15,6 +15,24 @@ function removeAllUsers() {
 	 		app.collection("users").deleteMany({}, function (err, res) {
 	 			if (err) {
 	 				throw err
+	 			}
+	 			callback()
+	 		})
+	 	}
+	 })
+}
+
+function deleteAllRequests(callback) {
+	mongoClient.connect(url,{"useNewUrlParser":true}, function (err, db) {
+	 	if (err) {
+	 		throw err
+	 	} else {
+	 		let app = db.db("app")
+	 		app.collection("aggregationRequests").deleteMany({}, function (err, res) {
+	 			if (err) {
+	 				throw err
+	 			} else {
+	 				callback()
 	 			}
 	 		})
 	 	}
@@ -50,7 +68,7 @@ function insertNewUser(pk, callbackFunction) {
 	 })
 }
 
-function insertSampleAggregationRequest (request) {
+function insertSampleAggregationRequest (request, callback) {
 	mongoClient.connect(url, {"useNewUrlParser":true}, function (err, db) {
 		if (err) {
 			console.log("Error in connecting ...")
@@ -70,6 +88,7 @@ function insertSampleAggregationRequest (request) {
 					} else {
 						console.log("Inserted sample aggregation with pk=" + request.pk + " and id=" + res.insertedId)
 						db.close()
+						callback(true)
 					}
 				})
 			}).catch(err => {
@@ -263,5 +282,6 @@ exports.getResults = getResults
 exports.getUsersPossibleForNewRequest = getUsersPossibleForNewRequest
 exports.updateUserTimestamp = updateUserTimestamp
 exports.removeAllUsers = removeAllUsers
+exports.deleteAllRequests = deleteAllRequests
 
 module.exports = exports
