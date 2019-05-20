@@ -9,10 +9,10 @@ let should = chai.should();
 
 chai.use(chaiHttp);
 //Our parent block
-describe('Books', () => {
+describe('Users', () => {
     beforeEach((done) => { //Before each test we empty the database
         Repository.removeAllUsers();
-        done();           
+        done();
     });        
 /*
   * Test the /GET route
@@ -25,10 +25,26 @@ describe('Books', () => {
             	.send(user)
             	.end((err, res) => {
                   	res.should.have.status(200);
+                  	res.body.should.have.status(true)
                   //res.body.should.be.a('array');
                   //res.body.length.should.be.eql(0);
               		done();
             	});
   		});
+	});
+
+	describe('/Post existing user', () => {
+		it('it should POST an existing user and fail', (done) => {
+			let user = {"pk":"testUserUnitTest"}
+			Repository.insertNewUser(user.pk, (success) => {})
+			chai.request(server)
+				.post('/user')
+				.send(user)
+				.end((err, res) => {
+					res.should.have.status(400);
+					res.body.should.have.status(false);
+					done();
+				});
+		});
 	});
 });

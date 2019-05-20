@@ -11,6 +11,7 @@ function removeAllUsers() {
 	 	if (err) {
 	 		throw err
 	 	} else {
+	 		let app = db.db("app")
 	 		app.collection("users").deleteMany({}, function (err, res) {
 	 			if (err) {
 	 				throw err
@@ -20,7 +21,7 @@ function removeAllUsers() {
 	 })
 }
 
-function insertNewUser(pk) {
+function insertNewUser(pk, callbackFunction) {
 	 mongoClient.connect(url,{"useNewUrlParser":true}, function (err, db) {
 	 	if (err) {
 	 		throw err
@@ -35,11 +36,13 @@ function insertNewUser(pk) {
 			 				throw err
 			 			} else {
 			 				console.log("Inserted new user with pk=" + pk + " and id=" + res.insertedId)
+			 				callbackFunction(true)
 			 				db.close()
 			 			}
 			 		})
 
 	 			} else {
+	 				callbackFunction(false)
 	 				console.log (`User ${pk} already present`)
 	 			}
 	 		})
