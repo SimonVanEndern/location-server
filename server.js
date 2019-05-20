@@ -41,3 +41,6 @@ app.all('*', RequestHandling.handleUnknownRequest)
 const server = app.listen(app.get('port'), function () {
 	console.log("Server listening on port " + port)
 })
+
+// For Testing
+module.exports = app

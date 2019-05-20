@@ -5,6 +5,21 @@ const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.
 "mongodb://localhost:27017/"
 const mongoClient = mongo.MongoClient
 
+// Only for testing
+function removeAllUsers() {
+	mongoClient.connect(url,{"useNewUrlParser":true}, function (err, db) {
+	 	if (err) {
+	 		throw err
+	 	} else {
+	 		app.collection("users").deleteMany({}, function (err, res) {
+	 			if (err) {
+	 				throw err
+	 			}
+	 		})
+	 	}
+	 })
+}
+
 function insertNewUser(pk) {
 	 mongoClient.connect(url,{"useNewUrlParser":true}, function (err, db) {
 	 	if (err) {
@@ -244,5 +259,6 @@ exports.insertNewAggregationAndDeleteRequest = insertNewAggregationAndDeleteRequ
 exports.getResults = getResults
 exports.getUsersPossibleForNewRequest = getUsersPossibleForNewRequest
 exports.updateUserTimestamp = updateUserTimestamp
+exports.removeAllUsers = removeAllUsers
 
 module.exports = exports
