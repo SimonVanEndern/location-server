@@ -48,13 +48,17 @@ function insertNewUser(pk, callbackFunction) {
 	 		app.collection("users").findOne({"pk":pk}, function (err, res) {
 	 			if (!res) {
 	 				console.log(res)
-			 		let user = {"pk": pk, "lastSignal": (new Date()).getTime()}
+			 		let user = {
+			 			"pk": pk, 
+			 			"lastSignal": (new Date()).getTime(),
+			 			"pw": Math.random().toString(36)
+			 		}
 			 		app.collection("users").insertOne(user, function (err, res) {
 			 			if (err) {
 			 				throw err
 			 			} else {
 			 				console.log("Inserted new user with pk=" + pk + " and id=" + res.insertedId)
-			 				callbackFunction(true)
+			 				callbackFunction(true, user.pw)
 			 				db.close()
 			 			}
 			 		})
@@ -274,6 +278,26 @@ function updateUserTimestamp (pk) {
 	})
 }
 
+function authenticateUser(user, pw, callback) {
+	console.log("Authenticating " + user + " with pw " + pw)
+	mongoClient.connect(url, {"useNewUrlParser": true}, function (err, db) {
+		if (err) {
+			throw err
+		} else {
+			let app = db.db("app")
+			let query = {"pk": user, "pw": pw}
+			app.collection("users").findOne(query, function (err, res) {
+				if (err) {
+					throw err
+				} else {
+					callback(true)
+					console.log("Found user " + user)
+				}
+			})
+		}
+	})
+}
+
 exports.insertNewUser = insertNewUser
 exports.insertSampleAggregationRequest = insertSampleAggregationRequest
 exports.getRequests = getRequests
@@ -284,5 +308,6 @@ exports.getUsersPossibleForNewRequest = getUsersPossibleForNewRequest
 exports.updateUserTimestamp = updateUserTimestamp
 exports.removeAllUsers = removeAllUsers
 exports.deleteAllRequests = deleteAllRequests
+exports.authenticateUser = authenticateUser
 
 module.exports = exports

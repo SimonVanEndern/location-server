@@ -10,6 +10,32 @@ const RequestHandling = require('./requests')
 
 app.use(express.json({"type": "application/json"}))
 
+function authenticate (req, res, next) {
+	let user
+	let pw
+	if (req.method === "GET") {
+		user = req.query.pk
+		pw = req.query.pw
+	} else {
+		user = req.body.pk
+		pw = req.body.pw
+	}
+	console.log("Try authentication ...")
+
+	Repository.authenticateUser(user, pw, (authenticated) => {
+		if (!authenticated) {
+			console.log("Authentication failed")
+			res.status(401).json({"status":false})
+		} else {
+			console.log("Authentication successful")
+			next()
+		}
+	})
+}
+
+app.use('/requests', authenticate)
+app.use('/forward', authenticate)
+
 app.use(function (req, res, next) {
 	if (req.method === "POST") {
 		if (!req.body.pk) {
@@ -26,6 +52,7 @@ app.use(function (req, res, next) {
 	}
 	next()
 })
+
 app.get('/', RequestHandling.handleBasicGetRequest)
 app.get('/info', RequestHandling.sendAPIInfo)
 app.get('/aggregations', RequestHandling.sendAggregations)
@@ -42,5 +69,5 @@ const server = app.listen(app.get('port'), function () {
 	console.log("Server listening on port " + port)
 })
 
-// For Testing
+// For Testings
 module.exports = app

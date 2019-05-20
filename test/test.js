@@ -54,9 +54,11 @@ describe('Users', () => {
 
 describe('Requests', () => {
 	let user = "testUserUnitTest"
+	let pw
 	beforeEach((done) => {
 		Repository.removeAllUsers(() => {
-			Repository.insertNewUser(user, (success) => {
+			Repository.insertNewUser(user, (success, password) => {
+				pw = password
 				Repository.deleteAllRequests(() => {
 					done()
 				})
@@ -77,7 +79,7 @@ describe('Requests', () => {
 			Repository.insertSampleAggregationRequest(request, (success) => {
 				if (success) {
 					chai.request(server)
-						.get('/requests?pk=' + user)
+						.get('/requests?pk=' + user + "&pw=" + pw)
 						.end((err, res) => {
 							res.should.have.status(200)
 							res.body.should.be.a('array')
