@@ -27,7 +27,8 @@ describe('Users', () => {
             	.send(user)
             	.end((err, res) => {
                   	res.should.have.status(200);
-                  	res.body.should.have.status(true)
+                  	res.body.pk.should.have.string(user.pk)
+                  	res.body.pw.should.not.be.empty
                   //res.body.should.be.a('array');
                   //res.body.length.should.be.eql(0);
               		done();
@@ -44,7 +45,7 @@ describe('Users', () => {
 					.send(user)
 					.end((err, res) => {
 						res.should.have.status(400);
-						res.body.should.have.status(false);
+						res.body.should.be.empty
 						done();
 					});
 			})

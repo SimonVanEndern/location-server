@@ -9,11 +9,14 @@ function handleNewUserRequest(req, res) {
 		let timestamp = (new Date()).getTime()
 		// TODO: Implement!!
 		console.log("Got new user request with pk=" + pk + " and timestamp=" + timestamp)
-		Repository.insertNewUser(pk, (success) => {
+		Repository.insertNewUser(pk, (success, pw) => {
 			if (success) {
-				res.status(200).json({"status":true});
+				res.status(200).json({
+					"pk": pk,
+					"pw": pw
+				});
 			} else {
-				res.status(400).json({"status":false});
+				res.status(400).json({});
 			}
 		});
 	}
