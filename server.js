@@ -31,14 +31,14 @@ function authenticate (req, res, next) {
 
 	pw = crypto.createHash("sha256").update(pw).digest()
 
-	console.log("Try authentication ...")
+	//console.log("Try authentication ...")
 
 	Repository.authenticateUser(user, pw, (authenticated) => {
 		if (!authenticated) {
 			console.log("Authentication failed")
 			res.status(401).json({"status":false})
 		} else {
-			console.log("Authentication successful")
+			//console.log("Authentication successful")
 			next()
 		}
 	})
@@ -81,7 +81,7 @@ app.use(function (req, res, next) {
 
 
 
-	let test = "test mich!"
+	/*let test = "test mich!"
 	//let publicKeyString = fs.readFileSync('public.pem').toString('utf8')
 	let publicKeyString = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp/he1JTafLx5ngpLKe2YL/dCvphetQNg6e2zw6ive+crGwwSkF3oyY7adyGxTWBQOcgBwYg67KJQaIhdgA3noRaSidJBbXPqNBxulr1GFaBq3SZh0l+YbajznU0EaeI/ENElTAs605/jkzMXdtq7cF3kbkdLOi2jLCN42H3C5EDR8UPDMifyrRl66p3IsapTuLVPoBU+lWSsRnxa4ZQuAAJy1OrzdqNFrfF355TD03gi+d/Fz4A29lDtaZ1eXxz9H8RkfCQclXR79D7ih4p7+KNKjm8IisQ6auceBNYaZm9q+TXPN9Wo1tYyGIZOeFp1xddcVk47zJPBprDmHWAGKwIDAQAB\n-----END PUBLIC KEY-----"
 	//"-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyPMJGQR7a/DTKokVTXk6TXuZbv5IUqAg\nWMyHmuAlri3eVNAWN10qVHVTdV06Zq6qN6rWcdYeJnEr91H4wngMvjdXvlvwAnEDr7VGJOqwUdDj\nfj3KUu3kQyEnx0gbNHH3VkBXGPtjNj7aAFI6ogyJbi1yr4mQuZO6RjksXZC26pcDOd4y7fT5AsDw\ny2iQradDYsT+OvsBFkeeGSNjVwjaBkRp2XXvdJifWToMcmUDLMhwnWzIyXWw+xFHuoOppUnDlrYN\nVXIUBtdKC3U+ISKZpcaMA3HLKJy86IxxOE0CrSdM+Iwd27r5DNwmwrE8Li9hU83IyimuPEzqiGBR\ngXNxdQIDAQAB\n-----END PUBLIC KEY-----"
@@ -109,7 +109,7 @@ app.use(function (req, res, next) {
 	console.log(testing2)
 	console.log(testing)
 	//console.log(String.fromCharCode.apply(null, ergebnis))
-	console.log("Encryption done")
+	console.log("Encryption done")*/
 
 	if (req.method === "POST") {
 		if (!req.body.pk) {

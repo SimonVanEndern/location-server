@@ -95,7 +95,7 @@ function handleForwardRequest (req, res) {
 	let data = req.body.data
 
 	// TODO: Re-voke user authentication!!!
-	if (target == undefined || original_request_id == undefined) {
+	if (!target || !original_request_id) {
 		console.log("Sending 400 to foward request")
 		res.status(400).send("Not Ok")
 	} else {
@@ -111,8 +111,8 @@ function sendRequests (req, res) {
 		{'id': 1, 'data': 'binarydataEncrypted...'}, 
 		{'id':2, 'data':'binarydataEncrypted'}
 	]}*/
-	let pk = req.query.pk
-	if (pk == undefined) {
+	let pk = req.query.pk.replace(/-/g, '+').replace(/_/g, '/').replace(/\+\+\+\+\+/g, '-----')
+	if (!pk) {
 		res.status(400).send("Not ok")
 	} else {
 		Repository.getRequests(pk).then(

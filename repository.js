@@ -48,7 +48,7 @@ function insertNewUser(pk, callbackFunction) {
 	 		let app = db.db("app")
 	 		app.collection("users").findOne({"pk":pk}, function (err, res) {
 	 			if (!res) {
-	 				console.log(res)
+	 				//console.log(res)
 	 				let pw = Math.random().toString(36)
 			 		let user = {
 			 			"pk": pk, 
@@ -59,7 +59,7 @@ function insertNewUser(pk, callbackFunction) {
 			 			if (err) {
 			 				throw err
 			 			} else {
-			 				console.log("Inserted new user with pk=" + pk + " and id=" + res.insertedId)
+			 				//console.log("Inserted new user with pk=" + pk + " and id=" + res.insertedId)
 			 				callbackFunction(true, pw)
 			 				db.close()
 			 			}
@@ -90,21 +90,21 @@ function insertSampleAggregationRequest (request, callback) {
 					tmp.nextUser = (users[0] == undefined ? null : users[0])
 					tmp.users = users
 					let synchronousKey = crypto.randomBytes(24).toString('base64')
-					console.log("synchronousKey: " + synchronousKey)
-					tmp.encryptionKey = crypto.publicEncrypt(tmp.pk, Buffer.from(synchronousKey, 'base64'))
+					//console.log("synchronousKey: " + synchronousKey)
+					tmp.encryptionKey = crypto.publicEncrypt(tmp.pk, Buffer.from(synchronousKey, 'base64')).toString('base64')
 					let cipher = crypto.createCipher("aes-128-ctr", synchronousKey)
-					let crypted = cipher.update(JSON.stringify(request), 'utf8', 'utf8')
-					crypted += cipher.final('utf8')
-					tmp.encryptedRequest = crypted
-					console.log(encryptedRequest)
+					let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
+					crypted += cipher.final('base64')
+					tmp.encryptedRequest = crypted.toString('base64')
+					//console.log(tmp)
 					app.collection("aggregationRequests").insertOne(tmp, function (err, res) {
 						if (err) {
 							console.log("Error in inserting one")
 							throw err
 						} else {
-							console.log("Inserted sample aggregation with pk=" + tmp.pk + " and id=" + res.insertedId)
+							//console.log("Inserted sample aggregation with pk=" + tmp.pk + " and id=" + res.insertedId)
 							db.close()
-							console.log(res.ops[0])
+							//console.log(res.ops[0])
 							callback(true, res.ops[0])
 						}
 					})
@@ -125,8 +125,6 @@ function getRequests(pk) {
 				} else {
 					let app = db.db("app")
 					let query = {"pk":pk}
-					console.log("Query: ")
-					console.log(query)
 					app.collection("aggregationRequests").find(query).toArray(function (err, result) {
 						if (err) {
 							throw err
@@ -137,8 +135,6 @@ function getRequests(pk) {
 								entry.serverId = entry._id
 							}
 
-							console.log("Found requests: ")
-							console.log(result)
 							resolve(result)
 							db.close()
 						}
@@ -163,7 +159,7 @@ function getResults() {
 						if (err) {
 							throw err
 						} else {
-							console.log(result)
+							//console.log(result)
 							resolve(result)
 							db.close()
 						}
@@ -180,6 +176,7 @@ function getUsersPossibleForNewRequest () {
 		return new Promise((resolve, reject) => {
 			mongoClient.connect(url, {"useNewUrlParser":true}, function (err, db) {
 				if (err) {
+					console.log("Connection error")
 					reject(err)
 				} else {
 					let app = db.db("app")
@@ -187,11 +184,11 @@ function getUsersPossibleForNewRequest () {
 					let query = {"lastSignal": {$gt : oneDay}}
 					app.collection("users").find(query).toArray(function (err, result) {
 						if (err) {
+							console.log("Error inserting user")
 							reject(err)
 						} else {
 							result = result.map(function (ele) {return ele.pk})
 							result.length = result.length > 10 ? 10 : result.length
-							console.log(result)
 							resolve(result)
 							db.close()
 						}
@@ -284,7 +281,7 @@ function updateUserTimestamp (pk) {
 				if (err) {
 					throw err
 				} else {
-					console.log("updated user " + pk)
+					//console.log("updated user " + pk)
 				}
 			})
 		}
@@ -292,7 +289,7 @@ function updateUserTimestamp (pk) {
 }
 
 function authenticateUser(user, pw, callback) {
-	console.log("Authenticating " + user + " with pw " + pw)
+	//console.log("Authenticating " + user + " with pw " + pw)
 	mongoClient.connect(url, {"useNewUrlParser": true}, function (err, db) {
 		if (err) {
 			throw err
@@ -304,7 +301,7 @@ function authenticateUser(user, pw, callback) {
 					throw err
 				} else {
 					callback(true)
-					console.log("Found user " + user)
+					//console.log("Found user " + user)
 				}
 			})
 		}
