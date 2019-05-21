@@ -89,8 +89,13 @@ function insertSampleAggregationRequest (request, callback) {
 					tmp.pk = users.shift()
 					tmp.nextUser = (users[0] == undefined ? null : users[0])
 					tmp.users = users
-					let buffer = Buffer.from(request)
-					tmp.encryptedRequest = crypto.publicEncrypt(tmp.pk, buffer).tostring("base64")
+					let synchronousKey = crypto.randomBytes(24).toString('base64')
+					console.log("synchronousKey: " + synchronousKey)
+					tmp.encryptionKey = crypto.publicEncrypt(tmp.pk, Buffer.from(synchronousKey, 'base64'))
+					let cipher = crypto.createCipher("aes-128-ctr", synchronousKey)
+					let crypted = cipher.update(JSON.stringify(request), 'utf8', 'utf8')
+					crypted += cipher.final('utf8')
+					tmp.encryptedRequest = crypted
 					console.log(encryptedRequest)
 					app.collection("aggregationRequests").insertOne(tmp, function (err, res) {
 						if (err) {
