@@ -81,23 +81,29 @@ function insertSampleAggregationRequest (request, callback) {
 			throw err
 		} else {
 			let app = db.db("app")
-			//let aggregationRequest = {"pk": pk, "data": "01000101010101"}
-			console.log(request)
 			getUsersPossibleForNewRequest().then(users => {
-				request.pk = users.shift()
-				request.nextUser = request.pk
-				request.users = users
-				app.collection("aggregationRequests").insertOne(request, function (err, res) {
-					if (err) {
-						console.log("Error in inserting one")
-						throw err
-					} else {
-						console.log("Inserted sample aggregation with pk=" + request.pk + " and id=" + res.insertedId)
-						db.close()
-						console.log(res.ops[0])
-						callback(true, res.ops[0])
-					}
-				})
+				if (users.length == 0) {
+					callback(false)
+				} else {
+					let tmp = {}
+					tmp.pk = users.shift()
+					tmp.nextUser = (users[0] == undefined ? null : users[0])
+					tmp.users = users
+					let buffer = Buffer.from(request)
+					tmp.encryptedRequest = crypto.publicEncrypt(tmp.pk, buffer).tostring("base64")
+					console.log(encryptedRequest)
+					app.collection("aggregationRequests").insertOne(tmp, function (err, res) {
+						if (err) {
+							console.log("Error in inserting one")
+							throw err
+						} else {
+							console.log("Inserted sample aggregation with pk=" + tmp.pk + " and id=" + res.insertedId)
+							db.close()
+							console.log(res.ops[0])
+							callback(true, res.ops[0])
+						}
+					})
+				}
 			}).catch(err => {
 				console.log("Could not create aggregation request. Could not retrieve possible users")
 			})
