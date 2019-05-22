@@ -29,7 +29,7 @@ function authenticate (req, res, next) {
 		return
 	}
 
-	pw = crypto.createHash("sha256").update(pw).digest()
+	pw = crypto.createHash("sha256").update(pw).digest().toString()
 
 	//console.log("Try authentication ...")
 

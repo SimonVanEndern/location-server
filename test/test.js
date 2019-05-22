@@ -90,7 +90,6 @@ describe('Requests', () => {
 								console.log("Error in request result")
 								done()
 							}
-							console.log(res.body)
 							res.should.have.status(200)
 							res.body.should.be.a('array')
 							res.body.should.have.lengthOf(1)
@@ -100,7 +99,6 @@ describe('Requests', () => {
 								let decipher = crypto.createDecipher("aes-128-ctr", synchronousKey)
 								let crypted = decipher.update(Buffer.from(ele.encryptedRequest, 'base64'), 'base64', 'utf8')
 								crypted += decipher.final('utf8')
-								console.log(crypted)
 								json = JSON.parse(crypted)
 								for (var prop in json) {
 									ele[prop] = json[prop]
@@ -114,7 +112,6 @@ describe('Requests', () => {
 							res.body[0].should.have.property("n", 0)
 							res.body[0].should.have.property("value", 0.1)
 							res.body[0].should.have.property("pk", user)
-							console.log(res.body[0].nextUser)
 							let tmp = (res.body[0].nextUser === null)
 							tmp.should.be.true
 							done()
@@ -128,7 +125,7 @@ describe('Requests', () => {
 
 	describe('/POST forward', () => {
 		let user2 = "secondUser"
-		it('it should POST a request to be forwarded', (done) => {
+		it('should POST a request to be forwarded', (done) => {
 			let request = {
 				"start"  : "2019-01-01",
 				"end": "2019-01-02",
@@ -149,6 +146,7 @@ describe('Requests', () => {
 							request.value = 3.3
 							chai.request(server)
 								.post('/forward')
+								.set('content-type', 'application/json')
 								.send(request)
 								.end((err, res) => {
 									res.should.have.status(200)
@@ -179,7 +177,6 @@ describe('Requests', () => {
 
 			Repository.insertSampleAggregationRequest(request, (success, doc) => {
 				if (success) {
-					console.log(doc)
 					doc.pk.should.be.string(user)
 					doc.users.should.be.a("array")
 					doc.users.should.be.empty

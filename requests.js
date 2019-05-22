@@ -88,7 +88,6 @@ function handleAggregationResult (req, res) {
 
 function handleForwardRequest (req, res) {
 	console.log("Got forward request")
-	console.log(req.body)
 	let pk = req.body.pk
 	let target = req.body.nextUser
 	let original_request_id = req.body.serverId
@@ -122,7 +121,7 @@ function sendRequests (req, res) {
 				})
 				res.status(200).send(result)
 			}
-		).catch(error => {throw err})
+		).catch(err => {throw err})
 	}
 }
 
