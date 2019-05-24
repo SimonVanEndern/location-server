@@ -177,14 +177,24 @@ describe('Requests', () => {
 							request.pw = pw
 							request.n = 3
 							request.value = 3.3
+
 							chai.request(server)
 								.post('/forward')
 								.set('content-type', 'application/json')
 								.send(request)
 								.end((err, res) => {
+									console.log(err)
 									res.should.have.status(200)
 									res.body.should.have.status(true)
-									done()
+									Repository.getRequests(doc.pk).then(res => {
+										res.should.be.a("array")
+										res.should.have.length(1)
+										Repository.getRequests(user2).then(res => {
+											res.should.be.a("array")
+											res.should.have.length(1)
+											done()	
+										})
+									})
 								})
 						} else {
 							console.log("Failed to set up test")
@@ -222,6 +232,7 @@ describe('Requests', () => {
 					crypted += decipher.final('utf8')
 
 					let decryptedRequest = JSON.parse(crypted)
+					request._id = request._id.toString()
 					decryptedRequest.should.deep.equal(request)
 
 					done()
