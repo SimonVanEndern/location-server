@@ -5,6 +5,7 @@ const port = 8888
 const fs = require('fs')
 app.set('port', process.env.PORT || port);
 const Repository = require('./repository')
+const UserRepository = require('./userRepository')
 const RequestHandling = require('./requests')
 
 // Populate database with sample data for pk = "xyz"
@@ -33,17 +34,13 @@ function authenticate (req, res, next) {
 
 	//console.log("Try authentication ...")
 
-	Repository.authenticateUser(user, pw, (authenticated) => {
-		if (!authenticated) {
-			console.log("Authentication failed")
-			res.status(401).json({"status":false})
-		} else {
-			//console.log("Authentication successful")
-			next()
-		}
+	UserRepository.authenticateUser(user, pw).then(() => {
+		next()
+	}).catch(err => {
+		console.log("Authentication failed")
+		res.status(401).json({"status":false})
 	})
 }
-
 
 app.use(function (req, res, next) {
 	/*console.log("Encryption: ")

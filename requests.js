@@ -1,5 +1,6 @@
 var exports = {}
 const Repository = require('./repository')
+let UserRepository = require('./userRepository')
 
 function handleNewUserRequest(req, res) {
 	let pk = req.body.pk
@@ -7,7 +8,7 @@ function handleNewUserRequest(req, res) {
 		res.status(400).send("Not ok")
 	} else {
 		let timestamp = (new Date()).getTime()
-		Repository.createUser(pk).then(user => {
+		UserRepository.createUser(pk).then(user => {
 			res.status(200).json({
 				"pk": pk,
 				"pw": user.pw
@@ -146,7 +147,7 @@ function handleInsertSample (req, res) {
 }
 
 function updateUserTimestamp (pk) {
-	Repository.updateUserTimestamp(pk)
+	UserRepository.updateUserTimestamp(pk)
 }
 
 exports.handleNewUserRequest = handleNewUserRequest

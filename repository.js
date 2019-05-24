@@ -14,33 +14,7 @@ const DB_AGGREGATION_REQUESTS = "aggregationRequests"
 const DB_AGGREGATION_RESULTS = "aggregationResults"
 
 function openDb () {
-	return new Promise ((resolve, reject) => {
-		mongoClient.connect(url, {"useNewUrlParser":true}, function (err, conn) {
-			if (err) {
-				reject(err)
-			} else {
-				resolve(conn)
-			}
-		})
-	})
-}
-
-// Only for testing
-function removeAllUsers(callback) {
-	let connection = null
-	let db = null
-	 openDb()
-	 	.then(conn => {
-	 		connection = conn
-	 		db = conn.db(DB)
-	 		return db.collection(DB_USER).deleteMany({})
-	 	}).then(res => {
-	 		connection.close()
-	 		callback()
-	 	}).catch(err => {
-	 		connection.close()
-	 		throw err
-	 	})
+	return mongoClient.connect(url, {"useNewUrlParser":true})
 }
 
 // Only for testing
@@ -92,38 +66,6 @@ function insertNewRawRequest (request) {
 		}
 	}).catch(err => {
 		return new Promise((reject, resolve) => {reject(err)})
-	})
-}
-
-function createUser(pk) {
-	let connection = null
-	let db = null
-	let pw = Math.random().toString(36)
-	return openDb().then(conn => {
-	 		connection = conn
-	 		db = conn.db(DB)
-	 	 	return db.collection(DB_USER).findOne({"pk":pk})
-	}).then(foundUser => {
-		if(!foundUser) {
-	 		return db.collection(DB_USER).insertOne(User.fromObject({
-	 			"pk": pk,
-	 			"lastSignal": (new Date()).getTime(),
-	 			"pw": crypto.createHash("sha256").update(pw).digest().toString()
-	 		}))
-		} else {
-			return Promise.reject("`User ${pk} already present`")
-		}
-	}).then(user => {
-		if (!user) {
-			Promise.reject("Error creating user")
-		} else {
-			return Promise.resolve(user.ops[0])
-		}
-	}).catch(err => {
-		console.error(err)
-		return Promise.reject("Error in creating user")
-	}).finally(() => {
-		connection.close()
 	})
 }
 
@@ -277,48 +219,13 @@ function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
 	})
 }
 
-function updateUserTimestamp (pk) {
-	openDb().then(conn => {
- 		db = conn.db(DB)
-		let query = {"pk": pk}
-		let update = {$set: { "lastSignal": (new Date()).getTime()}}
-		db.collection(DB_USER).updateOne(query, update)
-		conn.close()
-	}).catch(err => {
-		console.error(err)
-	})
-}
-
-function authenticateUser(user, pw, callback) {
-	openDb().then(conn => {
-		let db = conn.db(DB)
-		let query = {"pk": user, "pw": pw}
-		let result = db.collection(DB_USER).findOne()
-		conn.close()
-		return result
-	}).then (user => {
-		if (!user) {
-			callback(false)
-		} else {
-			callback(true)
-		}
-	}).catch(err => {
-		console.log(err)
-		callback(false)
-	})
-}
-
-exports.createUser = createUser
 exports.insertSampleAggregationRequest = insertSampleAggregationRequest
 exports.getRequests = getRequests
 exports.insertNewRequestAndDeleteOld = insertNewRequestAndDeleteOld
 exports.insertNewAggregationAndDeleteRequest = insertNewAggregationAndDeleteRequest
 exports.getResults = getResults
 exports.getUsersPossibleForNewRequest = getUsersPossibleForNewRequest
-exports.updateUserTimestamp = updateUserTimestamp
-exports.removeAllUsers = removeAllUsers
 exports.deleteAllRequests = deleteAllRequests
-exports.authenticateUser = authenticateUser
 exports.insertNewRawRequest = insertNewRawRequest
 exports.deleteAllResults = deleteAllResults
 

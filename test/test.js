@@ -6,6 +6,7 @@ let chai = require('chai');
 let chaiHttp = require('chai-http');
 let server = require('../server');
 let Repository = require('../repository');
+let UserRepository = require('../userRepository')
 let should = chai.should();
 let expect = chai.expect;
 
@@ -13,7 +14,7 @@ chai.use(chaiHttp);
 //Our parent block
 describe('Users', () => {
     beforeEach((done) => { //Before each test we empty the database
-        Repository.removeAllUsers(() => {
+        UserRepository.removeAllUsers().then(() => {
         	done();
         });
     });        
@@ -27,6 +28,7 @@ describe('Users', () => {
             	.post('/user')
             	.send(user)
             	.end((err, res) => {
+            		console.log(err)
                   	res.should.have.status(200);
                   	res.body.pk.should.have.string(user.pk)
                   	res.body.pw.should.not.be.empty
@@ -38,7 +40,7 @@ describe('Users', () => {
 	describe('/Post existing user', () => {
 		it('it should POST an existing user and fail', (done) => {
 			let user = {"pk":"testUserUnitTest"}
-			Repository.createUser(user.pk).then(() => {
+			UserRepository.createUser(user.pk).then(() => {
 				chai.request(server)
 					.post('/user')
 					.send(user)
@@ -91,8 +93,8 @@ describe('Requests', () => {
 	let pw
 	beforeEach((done) => {
 		//privateKey = privateKey.replace(/_/g, '/').replace(/-/g, '+')
-		Repository.removeAllUsers(() => {
-			Repository.createUser(user).then(user => {
+		UserRepository.removeAllUsers().then(() => {
+			UserRepository.createUser(user).then(user => {
 				pw = user.pw
 				Repository.deleteAllRequests(() => {
 					Repository.deleteAllResults(() => {
@@ -167,7 +169,7 @@ describe('Requests', () => {
 				"value": 0.1
 			}
 
-			Repository.createUser(user2).then(() => {
+			UserRepository.createUser(user2).then(() => {
 				Repository.insertSampleAggregationRequest(request, (success, doc) => {
 					if (success) {
 						request.serverId = doc._id
