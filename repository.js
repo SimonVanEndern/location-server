@@ -2,6 +2,7 @@ var exports = {}
 
 const mongo = require('mongodb')
 const crypto = require("crypto")
+const User = require('./userSchema')
 const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
 "mongodb://localhost:27017/"
 const mongoClient = mongo.MongoClient
@@ -94,34 +95,36 @@ function insertNewRawRequest (request) {
 	})
 }
 
-function insertNewUser(pk, callbackFunction) {
+function createUser(pk) {
 	let connection = null
 	let db = null
 	let pw = Math.random().toString(36)
-	 openDb().then(conn => {
+	return openDb().then(conn => {
 	 		connection = conn
 	 		db = conn.db(DB)
 	 	 	return db.collection(DB_USER).findOne({"pk":pk})
-	 	 }).then(foundUser => {
-	 		if(!foundUser) {
-		 		let user = {
-		 			"pk": pk, 
-		 			"lastSignal": (new Date()).getTime(),
-					"pw": crypto.createHash("sha256").update(pw).digest().toString()
-				}
-		 		return db.collection(DB_USER).insertOne(user)
-	 		} else {
-	 			throw "`User ${pk} already present`"
-	 		}
-		 }).then(res => {
-	 		connection.close()
-			callbackFunction(true, pw)
- 		}).catch(err => {
- 			console.error(err)
-	 		callbackFunction(false)
-	 	}).finally(() => {
-	 		connection.close()
- 		})
+	}).then(foundUser => {
+		if(!foundUser) {
+	 		return db.collection(DB_USER).insertOne(User.fromObject({
+	 			"pk": pk,
+	 			"lastSignal": (new Date()).getTime(),
+	 			"pw": crypto.createHash("sha256").update(pw).digest().toString()
+	 		}))
+		} else {
+			return Promise.reject("`User ${pk} already present`")
+		}
+	}).then(user => {
+		if (!user) {
+			Promise.reject("Error creating user")
+		} else {
+			return Promise.resolve(user.ops[0])
+		}
+	}).catch(err => {
+		console.error(err)
+		return Promise.reject("Error in creating user")
+	}).finally(() => {
+		connection.close()
+	})
 }
 
 function insertSampleAggregationRequest (request, callback) {
@@ -305,7 +308,7 @@ function authenticateUser(user, pw, callback) {
 	})
 }
 
-exports.insertNewUser = insertNewUser
+exports.createUser = createUser
 exports.insertSampleAggregationRequest = insertSampleAggregationRequest
 exports.getRequests = getRequests
 exports.insertNewRequestAndDeleteOld = insertNewRequestAndDeleteOld

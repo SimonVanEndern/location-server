@@ -30,8 +30,6 @@ describe('Users', () => {
                   	res.should.have.status(200);
                   	res.body.pk.should.have.string(user.pk)
                   	res.body.pw.should.not.be.empty
-                  //res.body.should.be.a('array');
-                  //res.body.length.should.be.eql(0);
               		done();
             	});
   		});
@@ -40,7 +38,7 @@ describe('Users', () => {
 	describe('/Post existing user', () => {
 		it('it should POST an existing user and fail', (done) => {
 			let user = {"pk":"testUserUnitTest"}
-			Repository.insertNewUser(user.pk, (success) => {
+			Repository.createUser(user.pk).then(() => {
 				chai.request(server)
 					.post('/user')
 					.send(user)
@@ -94,8 +92,8 @@ describe('Requests', () => {
 	beforeEach((done) => {
 		//privateKey = privateKey.replace(/_/g, '/').replace(/-/g, '+')
 		Repository.removeAllUsers(() => {
-			Repository.insertNewUser(user, (success, password) => {
-				pw = password
+			Repository.createUser(user).then(user => {
+				pw = user.pw
 				Repository.deleteAllRequests(() => {
 					Repository.deleteAllResults(() => {
 						done()
@@ -169,42 +167,38 @@ describe('Requests', () => {
 				"value": 0.1
 			}
 
-			Repository.insertNewUser(user2, (success) => {
-				if (success) {
-					Repository.insertSampleAggregationRequest(request, (success, doc) => {
-						if (success) {
-							request.serverId = doc._id
-							request.nextUser = doc.nextUser
-							request.pk = doc.pk
-							request.pw = pw
-							request.n = 3
-							request.value = 3.3
+			Repository.createUser(user2).then(() => {
+				Repository.insertSampleAggregationRequest(request, (success, doc) => {
+					if (success) {
+						request.serverId = doc._id
+						request.nextUser = doc.nextUser
+						request.pk = doc.pk
+						request.pw = pw
+						request.n = 3
+						request.value = 3.3
 
-							chai.request(server)
-								.post('/forward')
-								.set('content-type', 'application/json')
-								.send(request)
-								.end((err, res) => {
-									res.should.have.status(200)
-									res.body.should.have.status(true)
-									Repository.getRequests(doc.pk).then(res => {
+						chai.request(server)
+							.post('/forward')
+							.set('content-type', 'application/json')
+							.send(request)
+							.end((err, res) => {
+								res.should.have.status(200)
+								res.body.should.have.status(true)
+								Repository.getRequests(doc.pk).then(res => {
+									res.should.be.a("array")
+									res.should.have.length(1)
+									Repository.getRequests(user2).then(res => {
 										res.should.be.a("array")
 										res.should.have.length(1)
-										Repository.getRequests(user2).then(res => {
-											res.should.be.a("array")
-											res.should.have.length(1)
-											done()	
-										})
+										done()	
 									})
 								})
-						} else {
-							console.log("Failed to set up test")
-							throw "Failed to set up test"
-						}
-					})
-				} else {
-					console.log("Could not insert user")
-				}
+							})
+					} else {
+						console.log("Failed to set up test")
+						throw "Failed to set up test"
+					}
+				})
 			})
 		})
 	})

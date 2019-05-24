@@ -3,22 +3,19 @@ const Repository = require('./repository')
 
 function handleNewUserRequest(req, res) {
 	let pk = req.body.pk
-	if (pk == undefined || pk == "" || pk == null || pk == undefined) {
+	if (!pk) {
 		res.status(400).send("Not ok")
 	} else {
 		let timestamp = (new Date()).getTime()
-		// TODO: Implement!!
-		console.log("Got new user request with pk=" + pk + " and timestamp=" + timestamp)
-		Repository.insertNewUser(pk, (success, pw) => {
-			if (success) {
-				res.status(200).json({
-					"pk": pk,
-					"pw": pw
-				});
-			} else {
-				res.status(400).json({});
-			}
-		});
+		Repository.createUser(pk).then(user => {
+			res.status(200).json({
+				"pk": pk,
+				"pw": user.pw
+			})
+		}).catch(err => {
+			console.log(err)
+			res.status(400).json({});
+		})
 	}
 }
 
