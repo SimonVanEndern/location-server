@@ -94,13 +94,19 @@ function handleForwardRequest (req, res) {
 	let data = req.body.data
 
 	// TODO: Re-voke user authentication!!!
-	if (!target || !original_request_id) {
+	if (!original_request_id) {
 		console.log("Sending 400 to foward request")
 		res.status(400).send("Not Ok")
+		return
+	} else if (!target) {
+		Repository.insertNewAggregationAndDeleteRequest(target, req.body, original_request_id).then(() => {
+			res.status(200).json({"status":true});
+		})
 	} else {
-		console.log("Got forward request: target=" + target + " pk=" + pk + " original_request_id=" + original_request_id)
-		Repository.insertNewRequestAndDeleteOld(target, req.body, original_request_id)
-		res.status(200).json({"status":true});
+		Repository.insertNewRequestAndDeleteOld(target, req.body, original_request_id).then(() =>  {
+			console.log("Got forward request: target=" + target + " pk=" + pk + " original_request_id=" + original_request_id)
+			res.status(200).json({"status":true});
+		})
 	}
 }
 

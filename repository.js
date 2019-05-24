@@ -62,6 +62,15 @@ function deleteAllRequests(callback) {
 	 	})
 }
 
+function deleteAllResults (callback) {
+	openDb().then(conn => {
+		conn.db(DB).collection(DB_AGGREGATION_RESULTS).deleteMany({}, (err, res) => {
+			conn.close()
+			callback()
+		})
+	})
+}
+
 function insertNewRawRequest (request) {
 	if (!request.type || !request.start || !request.end) {
 		return Promise.reject("Missing required fields")
@@ -177,7 +186,7 @@ function getResults() {
 	return openDb().then(conn => {
  		db = conn.db(DB)
 		let result = db.collection(DB_AGGREGATION_RESULTS).find().toArray()
-		db.close()
+		conn.close()
 		return result
 	})
 }
@@ -202,7 +211,7 @@ function getUsersPossibleForNewRequest () {
 function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 	let connection = null
 	let db = null
-	openDb().then(conn => {
+	return openDb().then(conn => {
 		connection = conn
 		db = conn.db(DB)
 		return db.collection(DB_AGGREGATION_REQUESTS).findOne({"_id": mongo.ObjectId(original_request_id)})
@@ -216,7 +225,6 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 			data.rawRequestId = original.rawRequestId
 			delete data._id
 			delete data.pw
-			//let request = {"timestamp":(new Date()).getTime(), "data": data}
 			return db.collection(DB_AGGREGATION_REQUESTS).insertOne(data)
 		}
 	}).then(newRequest => {
@@ -235,26 +243,35 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 }
 
 function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
-	/*let connection = null
+	let connection = null
 	let db = null
-	openDb().then(conn => {
- 		connection = conn
- 		db = conn.db(DB)
+	return openDb().then(conn => {
+		connection = conn
+		db = conn.db(DB)
 		return db.collection(DB_AGGREGATION_REQUESTS).findOne({"_id": mongo.ObjectId(original_request_id)})
-	}).then(res => {
-		if (res == null) {
-			console.log("No document for request id: " + original_request_id)
+	}).then(original => {
+		if (!original) {
+			return Promise.reject("No corresponding request found")
 		} else {
-			console.log("Document exists...")
 			data.pk = data.nextUser
-			data.nextUser = res.users.shift()
-			data.users = res.users
-			return db.collection("aggregationRequests").insertOne(data)
+			data.nextUser = original.users.shift()
+			data.users = original.users
+			data.rawRequestId = original.rawRequestId
+			delete data._id
+			delete data.pw
+			let result = {"timestamp":(new Date()).getTime(), "data": data}
+			return db.collection(DB_AGGREGATION_RESULTS).insertOne(result)
 		}
-	}).then(res => {
-		db.collection(DB_AGGREGATION_REQUESTS).deleteOne({"_id": mongo.ObjectId(original_request_id)})
+	}).then(insertedResult => {
+		return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({
+			"rawRequestId" : insertedResult.ops[0].data.rawRequestId
+		})
+	}).catch(err => {
+		console.log(err)
+		Promise.reject(err)
+	}).finally(() => {
 		connection.close()
-	})*/
+	})
 }
 
 function updateUserTimestamp (pk) {
@@ -300,5 +317,6 @@ exports.removeAllUsers = removeAllUsers
 exports.deleteAllRequests = deleteAllRequests
 exports.authenticateUser = authenticateUser
 exports.insertNewRawRequest = insertNewRawRequest
+exports.deleteAllResults = deleteAllResults
 
 module.exports = exports

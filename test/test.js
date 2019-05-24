@@ -97,7 +97,9 @@ describe('Requests', () => {
 			Repository.insertNewUser(user, (success, password) => {
 				pw = password
 				Repository.deleteAllRequests(() => {
-					done()
+					Repository.deleteAllResults(() => {
+						done()
+					})
 				})
 			})
 		})
@@ -183,7 +185,6 @@ describe('Requests', () => {
 								.set('content-type', 'application/json')
 								.send(request)
 								.end((err, res) => {
-									console.log(err)
 									res.should.have.status(200)
 									res.body.should.have.status(true)
 									Repository.getRequests(doc.pk).then(res => {
@@ -203,6 +204,52 @@ describe('Requests', () => {
 					})
 				} else {
 					console.log("Could not insert user")
+				}
+			})
+		})
+	})
+
+	describe('/POST forward aggregation result', () => {
+		it('it should insert a aggregation result', (done) => {
+			let request = {
+				"start"  : "2019-01-01",
+				"end": "2019-01-02",
+				"type": "steps",
+				"n": 0,
+				"value": 0.1
+			}
+
+			Repository.insertSampleAggregationRequest(request, (success, doc) => {
+				if (success) {
+					request.serverId = doc._id
+					request.nextUser = doc.nextUser
+					request.pk = doc.pk
+					request.pw = pw
+					request.n = 3
+					request.value = 3.3
+
+					chai.request(server)
+						.post('/forward')
+						.set('content-type', 'application/json')
+						.send(request)
+						.end((err, res) => {
+							res.should.have.status(200)
+							res.body.should.have.status(true)
+							Repository.getResults().then(res => {
+								res.should.be.a("array")
+								res.should.have.length(1)
+								Repository.getRequests(user).then(res => {
+									res.should.be.a("array")
+									res.should.have.length(0)
+									done()	
+								})
+							}).catch(err => {
+								console.log(err)
+							})
+						})
+				} else {
+					console.log("Failed to set up test")
+					throw "Failed to set up test"
 				}
 			})
 		})
