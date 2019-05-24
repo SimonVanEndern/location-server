@@ -8,6 +8,7 @@ const mongoClient = mongo.MongoClient
 
 const DB = "app"
 const DB_USER = "users"
+const DB_AGGREGATION_REQUESTS_RAW = "rawAggregationRequests"
 const DB_AGGREGATION_REQUESTS = "aggregationRequests"
 const DB_AGGREGATION_RESULTS = "aggregationResults"
 
@@ -59,6 +60,30 @@ function deleteAllRequests(callback) {
 	 		connection.close()
 	 		throw err
 	 	})
+}
+
+function insertNewRawRequest (request) {
+	if (!request.type || !request.start || !request.end) {
+		return Promise.reject("Missing required fields")
+	}
+	let connection = null
+
+	return opendDb().then(conn => {
+		connection = conn
+		db = conn.db(DB)
+		return db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(request)
+	}).then(result => {
+		request.xx ="Test"
+		if (result.ops[0]) {
+			connection.close()
+			return new Promise((reject, resolve) => {resolve(result.ops[0])})
+		} else {
+			connection.close()
+			return new Promise((reject, resolve) => {reject("Unsuccessful insertion")})
+		}
+	}).catch(err => {
+		return new Promise((reject, resolve) => {reject(err)})
+	})
 }
 
 function insertNewUser(pk, callbackFunction) {
@@ -267,5 +292,6 @@ exports.updateUserTimestamp = updateUserTimestamp
 exports.removeAllUsers = removeAllUsers
 exports.deleteAllRequests = deleteAllRequests
 exports.authenticateUser = authenticateUser
+exports.insertNewRawRequest = insertNewRawRequest
 
 module.exports = exports
