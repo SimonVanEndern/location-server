@@ -141,8 +141,45 @@ function handleInsertSample (req, res) {
 	if (pk == undefined) {
 		res.status(400).send("Not ok")
 	} else {
-		Repository.insertSampleAggregationRequest(request)
-		res.status(200).send("Ok")
+		insertAggregation(request).then(res => {
+			res.status(200).send("Ok")
+		}).catch(err => {
+			res.status(400).send("Not ok")
+		})
+	}
+}
+
+
+function insertAggregation (request) {
+	let rawRequest = Repository.createRawRequest(request)
+	let possibleUsers = UserRepository.getUsersPossibleForNewRequest()
+	return Promise.all([rawRequest, possibleUsers]).then(result => {
+		let aggregationRequest = createFromRawRequest(request, rawRequest.rawRequestId, possibleUsers)
+		if (!aggregationRequest) {
+			console.log("ERROR")
+			return Promise.reject("Error")
+		} else {
+			return Repository.insertAggregationRequest(aggregationRequest)
+		}
+	})
+}
+
+function createFromRawRequest (request, rawRequestId, users) {
+	let synchronousKey = crypto.randomBytes(24).toString('base64')
+	let encryptionKey = crypto.publicEncrypt(users[0], Buffer.from(synchronousKey, 'base64')).toString('base64')
+	let cipher = crypto.createCipher("aes-128-ctr", synchronousKey)
+	let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
+	crypted += cipher.final('base64')
+
+	return {
+		type : request.type,
+		start : request.start,
+		end : request.end,
+		rawRequestId : rawRequestId,
+		pk : users.shift(),
+		nextUser : (users[0] == undefined ? null : users[0]),
+		encryptionKey : encryptionKey,
+		encryptedRequest : encryptedRequest
 	}
 }
 
@@ -162,5 +199,6 @@ exports.sendRequests = sendRequests
 exports.handleInsertSample = handleInsertSample
 exports.testing = testing
 exports.updateUserTimestamp = updateUserTimestamp
+exports.insertAggregation = insertAggregation
 
 module.exports = exports

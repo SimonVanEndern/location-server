@@ -2,7 +2,8 @@ var exports = {}
 
 const mongo = require('mongodb')
 const crypto = require("crypto")
-const User = require('./userSchema')
+const RawRequest = require('./rawRequest')
+const AggregationRequest = require('./aggregationRequest')
 const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
 "mongodb://localhost:27017/"
 const mongoClient = mongo.MongoClient
@@ -18,67 +19,83 @@ function openDb () {
 }
 
 // Only for testing
-function deleteAllRequests(callback) {
+function deleteAllRequests() {
 	let connection = null
 	let db = null
-	 openDb()
-	 	.then(conn => {
-	 		connection = conn
-	 		db = conn.db(DB)
-			database = conn.db(DB)
-	 		return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({})
-	 	})
-	 	.then(res => {
-	 		connection.close()
-	 		callback()
-	 	}).catch(err => {
-	 		connection.close()
-	 		throw err
-	 	})
+	return openDb().then(conn => {
+ 		connection = conn
+ 		db = conn.db(DB)
+ 		return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({})
+ 	}).then(res => {
+ 		connection.close()
+ 	})
 }
 
-function deleteAllResults (callback) {
-	openDb().then(conn => {
-		conn.db(DB).collection(DB_AGGREGATION_RESULTS).deleteMany({}, (err, res) => {
-			conn.close()
-			callback()
-		})
-	})
-}
-
-function insertNewRawRequest (request) {
-	if (!request.type || !request.start || !request.end) {
-		return Promise.reject("Missing required fields")
-	}
+function deleteAllResults () {
 	let connection = null
+	let db = null
+	return openDb().then(conn => {
+ 		connection = conn
+ 		db = conn.db(DB)
+ 		return db.collection(DB_AGGREGATION_RESULTS).deleteMany({})
+ 	}).then(res => {
+ 		connection.close()
+ 	})
+}
 
+function createRawRequest (request) {
+	let connection = null
 	return openDb().then(conn => {
 		connection = conn
 		db = conn.db(DB)
-		return db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(request)
-	}).then(result => {
-		if (result.ops[0]) {
-			connection.close()
-			return new Promise((reject, resolve) => {resolve(result.ops[0])})
+		console.log(request)
+		let rawRequest = RawRequest.fromObject(request)
+		if (!rawRequest) {
+			return Promise.reject("Missing required fields of raw")
 		} else {
-			connection.close()
-			return new Promise((reject, resolve) => {reject("Unsuccessful insertion")})
+			return db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(rawRequest)
 		}
-	}).catch(err => {
-		return new Promise((reject, resolve) => {reject(err)})
+	}).then(result => {
+		connection.close()
+		if (result.ops[0]) {
+			return Promise.resolve(result.ops[0])
+		} else {
+			return Promise.reject("Unsuccessful insertion")
+		}
 	})
 }
 
-function insertSampleAggregationRequest (request, callback) {
+function insertAggregationRequest (request) {
 	let connection = null
 	let db = null
-	openDb().then(conn => {
+	return openDb().then(conn => {
  		connection = conn
  		db = conn.db(DB)
- 		let insertedRequest = db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(request)
- 		let possibleUsers = getUsersPossibleForNewRequest()
- 		return Promise.all([insertedRequest, possibleUsers])
+ 		console.log(request)
+ 		let aggregationRequest = AggregationRequest.fromObject(request)
+ 		if (!aggregationRequest) {
+ 			return Promise.reject("Missing required fields of aggregation")
+ 		} else {
+ 			return db.collection(DB_AGGREGATION_REQUESTS).insertOne(aggregationRequest)
+ 		}
 	}).then(res => {
+		connection.close()
+		if (result.ops[0]) {
+			return Promise.resolve(result.ops[0])
+		} else {
+			return Promise.reject("Unsuccessful insertion of aggregation")
+		}
+	})
+	/*	request.rawRequestId = res[0].insertedId
+		request.pk = users.shift()
+		request.nextUser (users[0] == undefined ? null : users[0])
+
+		let toInsert = AggregationRequest.fromObject(request)
+		if (!toInsert) {
+
+		} else {
+
+		}
 		let insertedId = res[0].insertedId
 		let users = res[1]
 		if (users.length == 0) {
@@ -104,7 +121,7 @@ function insertSampleAggregationRequest (request, callback) {
 		console.log(err)
 	}).finally(() => {
 		connection.close()
-	})
+	})*/
 }
 
 function getRequests(pk) {
@@ -219,14 +236,14 @@ function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
 	})
 }
 
-exports.insertSampleAggregationRequest = insertSampleAggregationRequest
+exports.insertAggregationRequest = insertAggregationRequest
 exports.getRequests = getRequests
 exports.insertNewRequestAndDeleteOld = insertNewRequestAndDeleteOld
 exports.insertNewAggregationAndDeleteRequest = insertNewAggregationAndDeleteRequest
 exports.getResults = getResults
 exports.getUsersPossibleForNewRequest = getUsersPossibleForNewRequest
 exports.deleteAllRequests = deleteAllRequests
-exports.insertNewRawRequest = insertNewRawRequest
+exports.createRawRequest = createRawRequest
 exports.deleteAllResults = deleteAllResults
 
 module.exports = exports

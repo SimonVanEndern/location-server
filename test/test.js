@@ -7,6 +7,7 @@ let chaiHttp = require('chai-http');
 let server = require('../server');
 let Repository = require('../repository');
 let UserRepository = require('../userRepository')
+let Requests = require('../requests')
 let should = chai.should();
 let expect = chai.expect;
 
@@ -65,9 +66,9 @@ describe('Repository', () => {
 				"value": 0.1
 			}
 
-			Repository.insertNewRawRequest(request).then (result => {
+			Repository.createRawRequest(request).then (result => {
 				result.should.have.property("_id")
-				result.should.include.keys(Object.getOwnPropertyNames(request))
+				result.should.include.keys(["type", "start", "end"])
 				done()
 			})
 		})
@@ -96,8 +97,8 @@ describe('Requests', () => {
 		UserRepository.removeAllUsers().then(() => {
 			UserRepository.createUser(user).then(user => {
 				pw = user.pw
-				Repository.deleteAllRequests(() => {
-					Repository.deleteAllResults(() => {
+				Repository.deleteAllRequests().then(() => {
+					Repository.deleteAllResults().then(() => {
 						done()
 					})
 				})
@@ -115,7 +116,7 @@ describe('Requests', () => {
 				"value": 0.1
 			}
 
-			Repository.insertSampleAggregationRequest(request, (success,doc) => {
+			Requests.insertAggregation({pk: user, request: request}, (success,doc) => {
 				if (success) {
 					userUrlSafe = user.replace(/\//g, '_').replace(/\+/g, '-')
 					chai.request(server)
@@ -170,7 +171,7 @@ describe('Requests', () => {
 			}
 
 			UserRepository.createUser(user2).then(() => {
-				Repository.insertSampleAggregationRequest(request, (success, doc) => {
+				Requests.insertAggregation({pk: user, request: request}, (success,doc) => {
 					if (success) {
 						request.serverId = doc._id
 						request.nextUser = doc.nextUser
