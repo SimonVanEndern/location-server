@@ -72,9 +72,12 @@ function insertNewRawRequest (request) {
 function insertSampleAggregationRequest (request, callback) {
 	let connection = null
 	let db = null
+	let successfullyInsertedRequest = null
 	openDb().then(conn => {
  		connection = conn
  		db = conn.db(DB)
+ 		request.timestamp = (new Date()).getTime()
+ 		request.completed = false
  		let insertedRequest = db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(request)
  		let possibleUsers = getUsersPossibleForNewRequest()
  		return Promise.all([insertedRequest, possibleUsers])
@@ -86,6 +89,8 @@ function insertSampleAggregationRequest (request, callback) {
 		} else {
 			let tmp = {}
 			tmp.rawRequestId = insertedId
+			tmp.timestamp = (new Date()).getTime()
+			tmp.completed = false
 			tmp.pk = users.shift()
 			tmp.nextUser = (users[0] == undefined ? null : users[0])
 			tmp.users = users
@@ -97,8 +102,13 @@ function insertSampleAggregationRequest (request, callback) {
 			tmp.encryptedRequest = crypted.toString('base64')
 			return db.collection(DB_AGGREGATION_REQUESTS).insertOne(tmp)
 		}
+	}).then(insertedRequest => {
+		successfullyInsertedRequest = insertedRequest
+		let query = {"rawRequestId": insertedRequest.ops[0].rawRequestId}
+		let update = {$set : {"completed":true}}
+		return db.collection(DB_AGGREGATION_REQUESTS_RAW).updateOne(query, update)
 	}).then(res => {
-		callback(true, res.ops[0])
+		callback(true, successfullyInsertedRequest.ops[0])
 	}).catch(err => {
 		console.log("Could not create aggregation request. Could not retrieve possible users")
 		console.log(err)
@@ -168,6 +178,8 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 			data.nextUser = original.users.shift()
 			data.users = original.users
 			data.rawRequestId = original.rawRequestId
+			data.timestamp = (new Date()).getTime()
+			data.completed = false
 			delete data._id
 			delete data.pw
 			return db.collection(DB_AGGREGATION_REQUESTS).insertOne(data)
@@ -180,6 +192,10 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 				{"_id": {$ne : original_request_id}}
 			]
 		})
+	}).then(deletions => {
+		let query = {"_id": mongo.ObjectId(original_request_id)}
+		let update = {$set: { "completed": true}}
+		return db.collection(DB_USER).updateOne(query, update)
 	}).catch(err => {
 		Promise.reject(err)
 	}).finally(() => {

@@ -8,6 +8,10 @@ const Repository = require('./repository')
 const UserRepository = require('./userRepository')
 const RequestHandling = require('./requests')
 
+setInterval(function () { 
+    console.log('second passed'); 
+}, 1000); 
+
 // Populate database with sample data for pk = "xyz"
 // Repository.insertSampleAggregationRequest()
 
