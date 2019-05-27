@@ -28,7 +28,6 @@ describe('Users', () => {
             	.post('/user')
             	.send(user)
             	.end((err, res) => {
-            		console.log(err)
                   	res.should.have.status(200);
                   	res.body.pk.should.have.string(user.pk)
                   	res.body.pw.should.not.be.empty

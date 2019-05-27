@@ -13,26 +13,27 @@ const DB_AGGREGATION_REQUESTS_RAW = "rawAggregationRequests"
 const DB_AGGREGATION_REQUESTS = "aggregationRequests"
 const DB_AGGREGATION_RESULTS = "aggregationResults"
 
-function openDb () {
-	return mongoClient.connect(url, {"useNewUrlParser":true})
+let conn = null
+
+async function openDb () {
+	if (!conn) {
+		conn = await mongoClient.connect(url, {"useNewUrlParser":true})
+	}
+	return Promise.resolve(conn)
 }
 
 // Only for testing
 function deleteAllRequests(callback) {
-	let connection = null
 	let db = null
 	 openDb()
 	 	.then(conn => {
-	 		connection = conn
 	 		db = conn.db(DB)
 			database = conn.db(DB)
 	 		return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({})
 	 	})
 	 	.then(res => {
-	 		connection.close()
 	 		callback()
 	 	}).catch(err => {
-	 		connection.close()
 	 		throw err
 	 	})
 }
@@ -40,7 +41,6 @@ function deleteAllRequests(callback) {
 function deleteAllResults (callback) {
 	openDb().then(conn => {
 		conn.db(DB).collection(DB_AGGREGATION_RESULTS).deleteMany({}, (err, res) => {
-			conn.close()
 			callback()
 		})
 	})
@@ -50,18 +50,14 @@ function insertNewRawRequest (request) {
 	if (!request.type || !request.start || !request.end) {
 		return Promise.reject("Missing required fields")
 	}
-	let connection = null
 
 	return openDb().then(conn => {
-		connection = conn
 		db = conn.db(DB)
 		return db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(request)
 	}).then(result => {
 		if (result.ops[0]) {
-			connection.close()
 			return new Promise((reject, resolve) => {resolve(result.ops[0])})
 		} else {
-			connection.close()
 			return new Promise((reject, resolve) => {reject("Unsuccessful insertion")})
 		}
 	}).catch(err => {
@@ -70,11 +66,9 @@ function insertNewRawRequest (request) {
 }
 
 function insertSampleAggregationRequest (request, callback) {
-	let connection = null
 	let db = null
 	let successfullyInsertedRequest = null
 	openDb().then(conn => {
- 		connection = conn
  		db = conn.db(DB)
  		request.timestamp = (new Date()).getTime()
  		request.completed = false
@@ -113,18 +107,14 @@ function insertSampleAggregationRequest (request, callback) {
 	}).catch(err => {
 		console.log("Could not create aggregation request. Could not retrieve possible users")
 		console.log(err)
-	}).finally(() => {
-		connection.close()
 	})
 }
 
 function insertFromExistingRawRequest(requestId) {
-	let connection = null
 	let db = null
 	let successfullyInsertedRequest = null
 	let request = null
 	openDb().then(conn => {
- 		connection = conn
  		db = conn.db(DB)
  		let query = {"_id": requestId}
  		let insertedRequest = db.collection(DB_AGGREGATION_REQUESTS_RAW).find(query).toArray()
@@ -163,16 +153,12 @@ function insertFromExistingRawRequest(requestId) {
 	}).catch(err => {
 		console.log("Could not create aggregation request. Could not retrieve possible users")
 		console.log(err)
-	}).finally(() => {
-		connection.close()
 	})
 }
 
 function getRequests(pk) {
-	let connection = null
 	let db = null
 	return openDb().then(conn => {
- 		connection = conn
  		db = conn.db(DB)
  		let query = {"pk":pk, "completed": false}
 		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
@@ -182,7 +168,6 @@ function getRequests(pk) {
 			entry.serverId = entry._id
 		}
 
-		connection.close()
 		return new Promise((resolve, reject) => {resolve(result)})
 	})
 }
@@ -191,17 +176,13 @@ function getRequests(pk) {
 function getResults() {
 	return openDb().then(conn => {
  		db = conn.db(DB)
-		let result = db.collection(DB_AGGREGATION_RESULTS).find().toArray()
-		conn.close()
-		return result
+		return db.collection(DB_AGGREGATION_RESULTS).find().toArray()
 	})
 }
 
 function getUsersPossibleForNewRequest () {
-	let connection = null
 	let db = null
 	return openDb().then(conn => {
- 		connection = conn
  		db = conn.db(DB)
 		let oneDay = (new Date()).getTime() - 1000 * 60 * 60 * 24
 		let query = {"lastSignal": {$gt : oneDay}}
@@ -209,16 +190,13 @@ function getUsersPossibleForNewRequest () {
 	}).then(result => {
 		result = result.map(function (ele) {return ele.pk})
 		result.length = result.length > 10 ? 10 : result.length
-		connection.close()
 		return new Promise((resolve, reject) => {resolve(result)})
 	})
 }
 
 function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
-	let connection = null
 	let db = null
 	return openDb().then(conn => {
-		connection = conn
 		db = conn.db(DB)
 		return db.collection(DB_AGGREGATION_REQUESTS).findOne({"_id": mongo.ObjectId(original_request_id)})
 	}).then(original => {
@@ -250,16 +228,12 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 		return db.collection(DB_USER).updateOne(query, update)
 	}).catch(err => {
 		Promise.reject(err)
-	}).finally(() => {
-		connection.close()
 	})
 }
 
 function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
-	let connection = null
 	let db = null
 	return openDb().then(conn => {
-		connection = conn
 		db = conn.db(DB)
 		return db.collection(DB_AGGREGATION_REQUESTS).findOne({"_id": mongo.ObjectId(original_request_id)})
 	}).then(original => {
@@ -282,16 +256,12 @@ function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
 	}).catch(err => {
 		console.log(err)
 		Promise.reject(err)
-	}).finally(() => {
-		connection.close()
 	})
 }
 
 function cleanUp () {
-	let connection = null
 	let db = null
 	openDb().then(conn => {
-		connection = conn
 		db = conn.db(DB)
 		let query = {"completed": false, timestamp : {$lt : (new Date()).getTime() - 1000 * 60 * 60 * 18}}
 		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()

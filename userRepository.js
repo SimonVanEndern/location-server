@@ -8,8 +8,13 @@ const mongoClient = mongo.MongoClient
 const DB = "app"
 const DB_USER = "users"
 
-function openDb () {
-	return mongoClient.connect(url, {"useNewUrlParser":true})
+let conn = null
+
+async function openDb () {
+	if (!conn) {
+		conn = await mongoClient.connect(url, {"useNewUrlParser":true})
+	}
+	return Promise.resolve(conn)
 }
 
 // Only for testing
@@ -17,17 +22,14 @@ function removeAllUsers() {
 	return openDb().then(conn => {
  		db = conn.db(DB)
  		let result = db.collection(DB_USER).deleteMany({})
- 		conn.close()
  		return result
  	})
 }
 
 function createUser(pk) {
-	let connection = null
 	let db = null
 	let pw = Math.random().toString(36)
 	return openDb().then(conn => {
-	 		connection = conn
 	 		db = conn.db(DB)
 	 	 	return db.collection(DB_USER).findOne({"pk":pk})
 	}).then(foundUser => {
@@ -47,18 +49,15 @@ function createUser(pk) {
 			return Promise.resolve(user.ops[0])
 		}
 	}).catch(err => {
-		console.error(err)
+		console.log(err)
+		//console.error(err)
 		return Promise.reject("Error in creating user")
-	}).finally(() => {
-		connection.close()
 	})
 }
 
 function getUsersPossibleForNewRequest () {
-	let connection = null
 	let db = null
 	return openDb().then(conn => {
- 		connection = conn
  		db = conn.db(DB)
 		let oneDay = (new Date()).getTime() - 1000 * 60 * 60 * 24
 		let query = {"lastSignal": {$gt : oneDay}}
@@ -66,21 +65,16 @@ function getUsersPossibleForNewRequest () {
 	}).then(result => {
 		result = result.map(function (ele) {return ele.pk})
 		result.length = result.length > 10 ? 10 : result.length
-		connection.close()
 		return new Promise((resolve, reject) => {resolve(result)})
 	})
 }
 
 function updateUserTimestamp (pk) {
-	let connection = null
 	openDb().then(conn => {
-		connection = conn
  		db = conn.db(DB)
 		let query = {"pk": pk}
 		let update = {$set: { "lastSignal": (new Date()).getTime()}}
 		return db.collection(DB_USER).updateOne(query, update)
-	}).then(res => {
-		connection.close()
 	}).catch(err => {
 		console.error(err)
 	})
