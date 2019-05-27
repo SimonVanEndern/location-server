@@ -90,6 +90,7 @@ function insertSampleAggregationRequest (request, callback) {
 			let tmp = {}
 			tmp.rawRequestId = insertedId
 			tmp.timestamp = (new Date()).getTime()
+			tmp.previousRequest = null
 			tmp.completed = false
 			tmp.pk = users.shift()
 			tmp.nextUser = (users[0] == undefined ? null : users[0])
@@ -117,13 +118,63 @@ function insertSampleAggregationRequest (request, callback) {
 	})
 }
 
+function insertFromExistingRawRequest(requestId) {
+	let connection = null
+	let db = null
+	let successfullyInsertedRequest = null
+	let request = null
+	openDb().then(conn => {
+ 		connection = conn
+ 		db = conn.db(DB)
+ 		let query = {"_id": requestId}
+ 		let insertedRequest = db.collection(DB_AGGREGATION_REQUESTS_RAW).find(query).toArray()
+ 		let possibleUsers = getUsersPossibleForNewRequest()
+ 		return Promise.all([insertedRequest, possibleUsers])
+	}).then(res => {
+		request = res[0][0]
+		delete request._id
+		delete request.completed
+		let insertedId = res[0][0].insertedId
+		let users = res[1]
+		if (users.length == 0) {
+			callback(false)
+		} else {
+			let tmp = {}
+			tmp.rawRequestId = insertedId
+			tmp.timestamp = (new Date()).getTime()
+			tmp.previousRequest = null
+			tmp.completed = false
+			tmp.pk = users.shift()
+			tmp.nextUser = (users[0] == undefined ? null : users[0])
+			tmp.users = users
+			let synchronousKey = crypto.randomBytes(24).toString('base64')
+			tmp.encryptionKey = crypto.publicEncrypt(tmp.pk, Buffer.from(synchronousKey, 'base64')).toString('base64')
+			let cipher = crypto.createCipher("aes-128-ctr", synchronousKey)
+			let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
+			crypted += cipher.final('base64')
+			tmp.encryptedRequest = crypted.toString('base64')
+			return db.collection(DB_AGGREGATION_REQUESTS).insertOne(tmp)
+		}
+	}).then(insertedRequest => {
+		successfullyInsertedRequest = insertedRequest
+		let query = {"_id": insertedRequest.ops[0].rawRequestId}
+		let update = {$set : {"completed":true}}
+		return db.collection(DB_AGGREGATION_REQUESTS_RAW).updateOne(query, update)
+	}).catch(err => {
+		console.log("Could not create aggregation request. Could not retrieve possible users")
+		console.log(err)
+	}).finally(() => {
+		connection.close()
+	})
+}
+
 function getRequests(pk) {
 	let connection = null
 	let db = null
 	return openDb().then(conn => {
  		connection = conn
  		db = conn.db(DB)
- 		let query = {"pk":pk}
+ 		let query = {"pk":pk, "completed": false}
 		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
 	}).then(result => {
 		//TODO: Correct implementation
@@ -180,6 +231,7 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 			data.rawRequestId = original.rawRequestId
 			data.timestamp = (new Date()).getTime()
 			data.completed = false
+			data.previousRequest = original_request_id
 			delete data._id
 			delete data.pw
 			return db.collection(DB_AGGREGATION_REQUESTS).insertOne(data)
@@ -235,6 +287,46 @@ function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
 	})
 }
 
+function cleanUp () {
+	let connection = null
+	let db = null
+	openDb().then(conn => {
+		connection = conn
+		db = conn.db(DB)
+		let query = {"completed": false, timestamp : {$lt : (new Date()).getTime() - 1000 * 60 * 60 * 18}}
+		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
+	}).then(requests => {
+		let pendingRequests = []
+		requests.forEach(ele => {
+			if (ele.previousRequest) {
+				let query = {"_id" : mongo.ObjectId(ele.previousRequest)}
+				let update = {$set : {"completed": false}}
+				db.collection(DB_AGGREGATION_REQUESTS).updateOne(query, update).then(res => {
+					pendingRequests.push(db.collection(DB_AGGREGATION_REQUESTS).deleteOne({"_id": ele._id}))
+				})
+			} else {
+				let query = {"_id": mongo.ObjectId(ele.rawRequestId)}
+				let update = {$set : {"completed": false}}
+				db.collection(DB_AGGREGATION_REQUESTS_RAW).updateOne(query, update).then(res => {
+					pendingRequests.push(db.collection(DB_AGGREGATION_REQUESTS).deleteOne({"_id": ele._id}))
+				})
+			}
+		})
+		return Promise.all(pendingRequests)
+	}).then (() => {
+		let today = new Date()
+		let month = (today.getMonth() < 10) ? "0" + today.getMonth() : today.getMonth()
+		let day = (today.getDay() < 10) ? "0" + today.getDay() : today.getDay()
+		let todayString = today.getFullYear() + "-" + month + "-" + day
+		let query = {"completed": false, "end" : {$lt : todayString}}
+		db.collection(DB_AGGREGATION_REQUESTS_RAW).find(query).toArray().then(res => {
+			res.forEach(raw => {
+				insertFromExistingRawRequest(raw._id)
+			})
+		})
+	})
+}
+
 exports.insertSampleAggregationRequest = insertSampleAggregationRequest
 exports.getRequests = getRequests
 exports.insertNewRequestAndDeleteOld = insertNewRequestAndDeleteOld
@@ -244,5 +336,7 @@ exports.getUsersPossibleForNewRequest = getUsersPossibleForNewRequest
 exports.deleteAllRequests = deleteAllRequests
 exports.insertNewRawRequest = insertNewRawRequest
 exports.deleteAllResults = deleteAllResults
+exports.openDb = openDb
+exports.cleanUp = cleanUp
 
 module.exports = exports

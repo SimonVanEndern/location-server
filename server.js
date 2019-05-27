@@ -8,8 +8,8 @@ const Repository = require('./repository')
 const UserRepository = require('./userRepository')
 const RequestHandling = require('./requests')
 
-setInterval(function () { 
-    console.log('second passed'); 
+setInterval(function () {
+	Repository.cleanUp()
 }, 1000); 
 
 // Populate database with sample data for pk = "xyz"
