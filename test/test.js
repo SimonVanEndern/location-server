@@ -132,7 +132,7 @@ describe('Requests', () => {
 								let key = {"key" : privateKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
 								let synchronousKey = crypto.privateDecrypt(key, Buffer.from(ele.encryptionKey, 'base64')).toString('base64')
 								let iv = Buffer.from(ele.iv, 'base64')
-								let decipher = crypto.createDecipher("aes-256-cbc", synchronousKey, iv)
+								let decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(synchronousKey, 'base64'), iv)
 								let crypted = decipher.update(Buffer.from(ele.encryptedRequest, 'base64'), 'base64', 'utf8')
 								crypted += decipher.final('utf8')
 								json = JSON.parse(crypted)
@@ -274,7 +274,7 @@ describe('Requests', () => {
 					let key = {"key" : privateKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
 					let synchronousKey = crypto.privateDecrypt(key, Buffer.from(doc.encryptionKey, 'base64')).toString('base64')
 					let iv = Buffer.from(doc.iv, 'base64')
-					let decipher = crypto.createDecipher("aes-256-cbc", synchronousKey, iv)
+					let decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(synchronousKey, 'base64'), iv)
 					let crypted = decipher.update(Buffer.from(doc.encryptedRequest, 'base64'), 'base64', 'utf8')
 					crypted += decipher.final('utf8')
 

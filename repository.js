@@ -89,16 +89,19 @@ function insertSampleAggregationRequest (request, callback) {
 			tmp.pk = users.shift()
 			tmp.nextUser = (users[0] == undefined ? null : users[0])
 			tmp.users = users
-			let synchronousKey = crypto.randomBytes(24).toString('base64')
+			let synchronousKey = crypto.randomBytes(32).toString('base64')
+			tmp.sync = synchronousKey
+			console.log(Buffer.from(synchronousKey, 'base64'))
 			let iv = Buffer.alloc(16) // iv should be 16
 			iv = Buffer.from(Array.prototype.map.call(iv, () => {return Math.floor(Math.random() * 256)}))
 			let keyString = "-----BEGIN PUBLIC KEY-----\n" + tmp.pk + "\n-----END PUBLIC KEY-----"
 			let key = {"key": tmp.pk, "padding": crypto.constants.RSA_PKCS1_PADDING}
 			tmp.encryptionKey = crypto.publicEncrypt(key, Buffer.from(synchronousKey, 'base64')).toString('base64')
 			tmp.iv = iv.toString('base64')
-			let cipher = crypto.createCipher("aes-256-cbc", synchronousKey, iv)
+			let cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(synchronousKey, 'base64'), iv)
 			let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
 			crypted += cipher.final('base64')
+			console.log((Buffer.from("fO8RoBpN7fjTs21kPHYjetXQXprKZu1Oet1sdBlJ/jQ2RyTsl1Jc7YUot/WqbfUWtg7swpDjvZ3Z7Ot4Z+LOPuwBsWqjmS5Lqh2+j1MHcS8JXBw/jwosQbUQpWQu7ToMvpOi+dZSYfSXCqRvZJm4duVUml/grOBBaoBkbRC3OvTBf8mzNOJqYVXSdw8DKd1aKUdYPfKUXA1/GAf0rSq0Aw==", 'base64')).length)
 			tmp.encryptedRequest = crypted.toString('base64')
 			return db.collection(DB_AGGREGATION_REQUESTS).insertOne(tmp)
 		}
@@ -143,7 +146,7 @@ function insertFromExistingRawRequest(requestId) {
 			let synchronousKey = crypto.randomBytes(24).toString('base64')
 			let key = "-----BEGIN PUBLIC KEY-----\n" + tmp.pk + "\n-----END PUBLIC KEY-----"
 			tmp.encryptionKey = crypto.publicEncrypt(tmp.pk, Buffer.from(synchronousKey, 'base64')).toString('base64')
-			let cipher = crypto.createCipher("aes-128-ctr", synchronousKey)
+			let cipher = crypto.createCipheriv("aes-128-ctr", synchronousKey)
 			let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
 			crypted += cipher.final('base64')
 			tmp.encryptedRequest = crypted.toString('base64')
