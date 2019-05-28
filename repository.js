@@ -90,10 +90,13 @@ function insertSampleAggregationRequest (request, callback) {
 			tmp.nextUser = (users[0] == undefined ? null : users[0])
 			tmp.users = users
 			let synchronousKey = crypto.randomBytes(24).toString('base64')
+			let iv = Buffer.alloc(16) // iv should be 16
+			iv = Buffer.from(Array.prototype.map.call(iv, () => {return Math.floor(Math.random() * 256)}))
 			let keyString = "-----BEGIN PUBLIC KEY-----\n" + tmp.pk + "\n-----END PUBLIC KEY-----"
-			let key = {"key": keyString, "padding": crypto.constants.RSA_PKCS1_PADDING}
-			tmp.encryptionKey = crypto.publicEncrypt(tmp.pk, Buffer.from(synchronousKey, 'base64')).toString('base64')
-			let cipher = crypto.createCipher("aes-128-ctr", synchronousKey)
+			let key = {"key": tmp.pk, "padding": crypto.constants.RSA_PKCS1_PADDING}
+			tmp.encryptionKey = crypto.publicEncrypt(key, Buffer.from(synchronousKey, 'base64')).toString('base64')
+			tmp.iv = iv.toString('base64')
+			let cipher = crypto.createCipher("aes-256-cbc", synchronousKey, iv)
 			let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
 			crypted += cipher.final('base64')
 			tmp.encryptedRequest = crypted.toString('base64')

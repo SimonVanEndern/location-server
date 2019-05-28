@@ -129,8 +129,10 @@ describe('Requests', () => {
 							res.body.should.have.lengthOf(1)
 
 							res.body = res.body.map((ele) => {
-								let synchronousKey = crypto.privateDecrypt(privateKey, Buffer.from(ele.encryptionKey, 'base64')).toString('base64')
-								let decipher = crypto.createDecipher("aes-128-ctr", synchronousKey)
+								let key = {"key" : privateKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
+								let synchronousKey = crypto.privateDecrypt(key, Buffer.from(ele.encryptionKey, 'base64')).toString('base64')
+								let iv = Buffer.from(ele.iv, 'base64')
+								let decipher = crypto.createDecipher("aes-256-cbc", synchronousKey, iv)
 								let crypted = decipher.update(Buffer.from(ele.encryptedRequest, 'base64'), 'base64', 'utf8')
 								crypted += decipher.final('utf8')
 								json = JSON.parse(crypted)
@@ -267,9 +269,12 @@ describe('Requests', () => {
 					doc.users.should.be.empty
 					let tmp = (doc.nextUser === null)
 					tmp.should.be.true
+					//doc.iv.should.be.a("String")
 
-					let synchronousKey = crypto.privateDecrypt(privateKey, Buffer.from(doc.encryptionKey, 'base64')).toString('base64')
-					let decipher = crypto.createDecipher("aes-128-ctr", synchronousKey)
+					let key = {"key" : privateKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
+					let synchronousKey = crypto.privateDecrypt(key, Buffer.from(doc.encryptionKey, 'base64')).toString('base64')
+					let iv = Buffer.from(doc.iv, 'base64')
+					let decipher = crypto.createDecipher("aes-256-cbc", synchronousKey, iv)
 					let crypted = decipher.update(Buffer.from(doc.encryptedRequest, 'base64'), 'base64', 'utf8')
 					crypted += decipher.final('utf8')
 
