@@ -14,21 +14,24 @@ const DB_AGGREGATION_REQUESTS = "aggregationRequests"
 const DB_AGGREGATION_RESULTS = "aggregationResults"
 
 let conn = null
+let db = null
 
 async function openDb () {
 	if (!conn) {
-		conn = await mongoClient.connect(url, {"useNewUrlParser":true})
+		conn = mongoClient.connect(url, {"useNewUrlParser":true})
 	}
-	return Promise.resolve(conn)
+	if (!db) {
+		return conn.then(conn => {
+			db = conn.db(DB)
+			return db
+		})
+	}
+	return Promise.resolve(db)
 }
 
 // Only for testing
 function deleteAllRequests(callback) {
-	let db = null
-	 openDb()
-	 	.then(conn => {
-	 		db = conn.db(DB)
-			database = conn.db(DB)
+	 openDb().then(db => {
 	 		return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({})
 	 	})
 	 	.then(res => {
@@ -39,8 +42,8 @@ function deleteAllRequests(callback) {
 }
 
 function deleteAllResults (callback) {
-	openDb().then(conn => {
-		conn.db(DB).collection(DB_AGGREGATION_RESULTS).deleteMany({}, (err, res) => {
+	openDb().then(db => {
+		db.collection(DB_AGGREGATION_RESULTS).deleteMany({}, (err, res) => {
 			callback()
 		})
 	})
@@ -51,8 +54,7 @@ function insertNewRawRequest (request) {
 		return Promise.reject("Missing required fields")
 	}
 
-	return openDb().then(conn => {
-		db = conn.db(DB)
+	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(request)
 	}).then(result => {
 		if (result.ops[0]) {
@@ -66,10 +68,8 @@ function insertNewRawRequest (request) {
 }
 
 function insertSampleAggregationRequest (request, callback) {
-	let db = null
 	let successfullyInsertedRequest = null
-	openDb().then(conn => {
- 		db = conn.db(DB)
+	openDb().then(db => {
  		request.timestamp = (new Date()).getTime()
  		request.completed = false
  		let insertedRequest = db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(request)
@@ -90,7 +90,9 @@ function insertSampleAggregationRequest (request, callback) {
 			tmp.nextUser = (users[0] == undefined ? null : users[0])
 			tmp.users = users
 			let synchronousKey = crypto.randomBytes(24).toString('base64')
-			tmp.encryptionKey = crypto.publicEncrypt(tmp.pk, Buffer.from(synchronousKey, 'base64')).toString('base64')
+			let key = "-----BEGIN PUBLIC KEY-----\n" + tmp.pk + "\n-----END PUBLIC KEY-----"
+			console.log(key)
+			tmp.encryptionKey = crypto.publicEncrypt(key, Buffer.from(synchronousKey, 'base64')).toString('base64')
 			let cipher = crypto.createCipher("aes-128-ctr", synchronousKey)
 			let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
 			crypted += cipher.final('base64')
@@ -111,11 +113,9 @@ function insertSampleAggregationRequest (request, callback) {
 }
 
 function insertFromExistingRawRequest(requestId) {
-	let db = null
 	let successfullyInsertedRequest = null
 	let request = null
-	openDb().then(conn => {
- 		db = conn.db(DB)
+	openDb().then(db => {
  		let query = {"_id": requestId}
  		let insertedRequest = db.collection(DB_AGGREGATION_REQUESTS_RAW).find(query).toArray()
  		let possibleUsers = getUsersPossibleForNewRequest()
@@ -138,7 +138,8 @@ function insertFromExistingRawRequest(requestId) {
 			tmp.nextUser = (users[0] == undefined ? null : users[0])
 			tmp.users = users
 			let synchronousKey = crypto.randomBytes(24).toString('base64')
-			tmp.encryptionKey = crypto.publicEncrypt(tmp.pk, Buffer.from(synchronousKey, 'base64')).toString('base64')
+			let key = "-----BEGIN PUBLIC KEY-----\n" + tmp.pk + "\n-----END PUBLIC KEY-----"
+			tmp.encryptionKey = crypto.publicEncrypt(key, Buffer.from(synchronousKey, 'base64')).toString('base64')
 			let cipher = crypto.createCipher("aes-128-ctr", synchronousKey)
 			let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
 			crypted += cipher.final('base64')
@@ -157,10 +158,10 @@ function insertFromExistingRawRequest(requestId) {
 }
 
 function getRequests(pk) {
-	let db = null
-	return openDb().then(conn => {
- 		db = conn.db(DB)
+	return openDb().then(db => {
  		let query = {"pk":pk, "completed": false}
+ 		console.log("PK: ")
+ 		console.log(pk)
 		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
 	}).then(result => {
 		//TODO: Correct implementation
@@ -174,16 +175,13 @@ function getRequests(pk) {
 
 
 function getResults() {
-	return openDb().then(conn => {
- 		db = conn.db(DB)
+	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_RESULTS).find().toArray()
 	})
 }
 
 function getUsersPossibleForNewRequest () {
-	let db = null
-	return openDb().then(conn => {
- 		db = conn.db(DB)
+	return openDb().then(db => {
 		let oneDay = (new Date()).getTime() - 1000 * 60 * 60 * 24
 		let query = {"lastSignal": {$gt : oneDay}}
 		return db.collection(DB_USER).find(query).toArray()
@@ -195,9 +193,7 @@ function getUsersPossibleForNewRequest () {
 }
 
 function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
-	let db = null
-	return openDb().then(conn => {
-		db = conn.db(DB)
+	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_REQUESTS).findOne({"_id": mongo.ObjectId(original_request_id)})
 	}).then(original => {
 		if (!original) {
@@ -232,9 +228,7 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 }
 
 function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
-	let db = null
-	return openDb().then(conn => {
-		db = conn.db(DB)
+	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_REQUESTS).findOne({"_id": mongo.ObjectId(original_request_id)})
 	}).then(original => {
 		if (!original) {
@@ -260,9 +254,7 @@ function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
 }
 
 function cleanUp () {
-	let db = null
-	openDb().then(conn => {
-		db = conn.db(DB)
+	openDb().then(db => {
 		let query = {"completed": false, timestamp : {$lt : (new Date()).getTime() - 1000 * 60 * 60 * 18}}
 		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
 	}).then(requests => {

@@ -9,28 +9,32 @@ const DB = "app"
 const DB_USER = "users"
 
 let conn = null
+let db = null
 
 async function openDb () {
 	if (!conn) {
-		conn = await mongoClient.connect(url, {"useNewUrlParser":true})
+		conn = mongoClient.connect(url, {"useNewUrlParser":true})
 	}
-	return Promise.resolve(conn)
+	if (!db) {
+		return conn.then(conn => {
+			db = conn.db(DB)
+			return db
+		})
+	}
+	return Promise.resolve(db)
 }
 
 // Only for testing
 function removeAllUsers() {
-	return openDb().then(conn => {
- 		db = conn.db(DB)
+	return openDb().then(db => {
  		let result = db.collection(DB_USER).deleteMany({})
  		return result
  	})
 }
 
 function createUser(pk) {
-	let db = null
 	let pw = Math.random().toString(36)
-	return openDb().then(conn => {
-	 		db = conn.db(DB)
+	return openDb().then(db => {
 	 	 	return db.collection(DB_USER).findOne({"pk":pk})
 	}).then(foundUser => {
 		if(!foundUser) {
@@ -56,9 +60,7 @@ function createUser(pk) {
 }
 
 function getUsersPossibleForNewRequest () {
-	let db = null
-	return openDb().then(conn => {
- 		db = conn.db(DB)
+	return openDb().then(db => {
 		let oneDay = (new Date()).getTime() - 1000 * 60 * 60 * 24
 		let query = {"lastSignal": {$gt : oneDay}}
 		return db.collection(DB_USER).find(query).toArray()
@@ -70,8 +72,7 @@ function getUsersPossibleForNewRequest () {
 }
 
 function updateUserTimestamp (pk) {
-	openDb().then(conn => {
- 		db = conn.db(DB)
+	openDb().then(db => {
 		let query = {"pk": pk}
 		let update = {$set: { "lastSignal": (new Date()).getTime()}}
 		return db.collection(DB_USER).updateOne(query, update)
@@ -81,8 +82,7 @@ function updateUserTimestamp (pk) {
 }
 
 function authenticateUser(user, pw) {
-	return openDb().then(conn => {
-		let db = conn.db(DB)
+	return openDb().then(db => {
 		let query = {"pk": user, "pw": pw}
 		return result = db.collection(DB_USER).findOne()
 	}).then (user => {

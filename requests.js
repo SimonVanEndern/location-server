@@ -58,6 +58,8 @@ function sendAggregations (req, res) {
 		res.set({
 			'Content-Type': 'text/json'
 		})
+		console.log("Sending result: ")
+		console.log(result)
 		res.status(200).send(result)
 	}).catch(error => {
 		throw err
@@ -130,6 +132,7 @@ function sendRequests (req, res) {
 }
 
 function handleInsertSample (req, res) {
+	console.log("Handling sample insert")
 	//TODO: Restrict to admin only
 	pk = req.body.pk
 	request = req.body.request
@@ -141,8 +144,13 @@ function handleInsertSample (req, res) {
 	if (pk == undefined) {
 		res.status(400).send("Not ok")
 	} else {
-		Repository.insertSampleAggregationRequest(request)
-		res.status(200).send("Ok")
+		Repository.insertSampleAggregationRequest(request, (success) => {
+			if (success) {
+				res.status(200).send("Ok")
+			} else {
+				res.status(400).send("Not oki")				
+			}
+		})
 	}
 }
 
