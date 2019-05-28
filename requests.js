@@ -116,7 +116,8 @@ function sendRequests (req, res) {
 		{'id': 1, 'data': 'binarydataEncrypted...'}, 
 		{'id':2, 'data':'binarydataEncrypted'}
 	]}*/
-	let pk = req.query.pk.replace(/-/g, '+').replace(/_/g, '/').replace(/\+\+\+\+\+/g, '-----')
+	let pk = req.query.pk
+	//.replace(/-/g, '+').replace(/_/g, '/').replace(/\+\+\+\+\+/g, '-----')
 	if (!pk) {
 		res.status(400).send("Not ok")
 	} else {

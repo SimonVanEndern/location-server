@@ -90,9 +90,9 @@ function insertSampleAggregationRequest (request, callback) {
 			tmp.nextUser = (users[0] == undefined ? null : users[0])
 			tmp.users = users
 			let synchronousKey = crypto.randomBytes(24).toString('base64')
-			let key = "-----BEGIN PUBLIC KEY-----\n" + tmp.pk + "\n-----END PUBLIC KEY-----"
-			console.log(key)
-			tmp.encryptionKey = crypto.publicEncrypt(key, Buffer.from(synchronousKey, 'base64')).toString('base64')
+			let keyString = "-----BEGIN PUBLIC KEY-----\n" + tmp.pk + "\n-----END PUBLIC KEY-----"
+			let key = {"key": keyString, "padding": crypto.constants.RSA_PKCS1_PADDING}
+			tmp.encryptionKey = crypto.publicEncrypt(tmp.pk, Buffer.from(synchronousKey, 'base64')).toString('base64')
 			let cipher = crypto.createCipher("aes-128-ctr", synchronousKey)
 			let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
 			crypted += cipher.final('base64')
@@ -139,7 +139,7 @@ function insertFromExistingRawRequest(requestId) {
 			tmp.users = users
 			let synchronousKey = crypto.randomBytes(24).toString('base64')
 			let key = "-----BEGIN PUBLIC KEY-----\n" + tmp.pk + "\n-----END PUBLIC KEY-----"
-			tmp.encryptionKey = crypto.publicEncrypt(key, Buffer.from(synchronousKey, 'base64')).toString('base64')
+			tmp.encryptionKey = crypto.publicEncrypt(tmp.pk, Buffer.from(synchronousKey, 'base64')).toString('base64')
 			let cipher = crypto.createCipher("aes-128-ctr", synchronousKey)
 			let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
 			crypted += cipher.final('base64')

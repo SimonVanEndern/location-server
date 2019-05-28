@@ -52,14 +52,14 @@ app.use(function (req, res, next) {
 		if (!req.body.pk) {
 			console.log("WARNING: No user specified")
 		} else {
-			req.body.pk = req.body.pk.replace(/-/g, '+').replace(/_/g, '/')
+			//req.body.pk = req.body.pk.replace(/-/g, '+').replace(/_/g, '/')
 			RequestHandling.updateUserTimestamp(req.body.pk)
 		}
 	} else if (req.method === "GET") {
 		if (!req.query.pk) {
 			console.log("WARNING: No user specified")
 		} else {
-			req.query.pk = req.query.pk.replace(/-/g, '+').replace(/_/g, '/')
+			req.query.pk = req.query.pk.replace(/-/g, '+').replace(/_/g, '/').replace(/\+\+\+\+\+/g, '-----')
 			RequestHandling.updateUserTimestamp(req.query.pk)
 		}
 	}

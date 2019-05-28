@@ -1,11 +1,11 @@
 {
-  "name": "privacy-research",
+  "name": "privacy-research2",
   "main": "server.js",
   "description": "Support server for my bachelor thesis",
   "version": "0.1.1",
   "private": false,
   "engines": {
-    "node": "8.*"
+    "node": "10.15.3"
   },
   "dependencies": {
     "express": "^4.16.4",
