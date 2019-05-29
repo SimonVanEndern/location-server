@@ -91,7 +91,6 @@ function insertSampleAggregationRequest (request, callback) {
 			tmp.users = users
 			let synchronousKey = crypto.randomBytes(32).toString('base64')
 			tmp.sync = synchronousKey
-			console.log(Buffer.from(synchronousKey, 'base64'))
 			let iv = Buffer.alloc(16) // iv should be 16
 			iv = Buffer.from(Array.prototype.map.call(iv, () => {return Math.floor(Math.random() * 256)}))
 			let keyString = "-----BEGIN PUBLIC KEY-----\n" + tmp.pk + "\n-----END PUBLIC KEY-----"
@@ -101,13 +100,12 @@ function insertSampleAggregationRequest (request, callback) {
 			let cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(synchronousKey, 'base64'), iv)
 			let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
 			crypted += cipher.final('base64')
-			console.log((Buffer.from("fO8RoBpN7fjTs21kPHYjetXQXprKZu1Oet1sdBlJ/jQ2RyTsl1Jc7YUot/WqbfUWtg7swpDjvZ3Z7Ot4Z+LOPuwBsWqjmS5Lqh2+j1MHcS8JXBw/jwosQbUQpWQu7ToMvpOi+dZSYfSXCqRvZJm4duVUml/grOBBaoBkbRC3OvTBf8mzNOJqYVXSdw8DKd1aKUdYPfKUXA1/GAf0rSq0Aw==", 'base64')).length)
 			tmp.encryptedRequest = crypted.toString('base64')
 			return db.collection(DB_AGGREGATION_REQUESTS).insertOne(tmp)
 		}
 	}).then(insertedRequest => {
 		successfullyInsertedRequest = insertedRequest
-		let query = {"rawRequestId": insertedRequest.ops[0].rawRequestId}
+		let query = {"_id": insertedRequest.ops[0].rawRequestId}
 		let update = {$set : {"completed":true}}
 		return db.collection(DB_AGGREGATION_REQUESTS_RAW).updateOne(query, update)
 	}).then(res => {
@@ -166,8 +164,6 @@ function insertFromExistingRawRequest(requestId) {
 function getRequests(pk) {
 	return openDb().then(db => {
  		let query = {"pk":pk, "completed": false}
- 		console.log("PK: ")
- 		console.log(pk)
 		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
 	}).then(result => {
 		//TODO: Correct implementation
