@@ -87,7 +87,10 @@ function insertSampleAggregationRequest (request, callback) {
 			tmp.previousRequest = null
 			tmp.completed = false
 			tmp.pk = users.shift()
-			tmp.nextUser = (users[0] == undefined ? null : users[0])
+			tmp.nextUser = users.shift()
+			if (tmp.nextUser == undefined) {
+				tmp.nextUser = null
+			}
 			tmp.users = users
 			let synchronousKey = crypto.randomBytes(32).toString('base64')
 			tmp.sync = synchronousKey
@@ -186,7 +189,8 @@ function getUsersPossibleForNewRequest () {
 	return openDb().then(db => {
 		let oneDay = (new Date()).getTime() - 1000 * 60 * 60 * 24
 		let query = {"lastSignal": {$gt : oneDay}}
-		return db.collection(DB_USER).find(query).toArray()
+		let sort = {"lastSignal" : -1}
+		return db.collection(DB_USER).find(query).sort(sort).toArray()
 	}).then(result => {
 		result = result.map(function (ele) {return ele.pk})
 		result.length = result.length > 10 ? 10 : result.length
