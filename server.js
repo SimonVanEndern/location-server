@@ -52,14 +52,14 @@ function authenticate (req, res, next) {
 app.use(function (req, res, next) {
 	if (req.method === "POST") {
 		if (!req.body.pk) {
-			console.log("WARNING: No user specified")
+			console.log("WARNING: No user specified on POST")
 		} else {
 			//req.body.pk = req.body.pk.replace(/-/g, '+').replace(/_/g, '/')
 			RequestHandling.updateUserTimestamp(req.body.pk)
 		}
 	} else if (req.method === "GET") {
 		if (!req.query.pk) {
-			console.log("WARNING: No user specified")
+			console.log("WARNING: No user specified on GET")
 		} else {
 			req.query.pk = req.query.pk.replace(/-/g, '+').replace(/_/g, '/').replace(/\+\+\+\+\+/g, '-----')
 			RequestHandling.updateUserTimestamp(req.query.pk)
