@@ -233,6 +233,7 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 }
 
 function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
+	let rawRequestId = null
 	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_REQUESTS).findOne({
 			"_id": mongo.ObjectId(original_request_id),
@@ -252,9 +253,14 @@ function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
 			return db.collection(DB_AGGREGATION_RESULTS).insertOne(result)
 		}
 	}).then(insertedResult => {
+		rawRequestId = insertedResult.ops[0].data.rawRequestId
 		return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({
 			"rawRequestId" : insertedResult.ops[0].data.rawRequestId
 		})
+	}).then(deletedRequests => {
+		return db.collection(DB_AGGREGATION_REQUESTS_RAW).deleteMany({
+			"_id": rawRequestId
+		})		
 	}).catch(err => {
 		console.log(err)
 		Promise.reject(err)
