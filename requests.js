@@ -104,7 +104,7 @@ function handleForwardRequest (req, res) {
 		})
 	} else {
 		Repository.insertNewRequestAndDeleteOld(target, req.body, original_request_id).then(() =>  {
-			console.log("Got forward request: target=" + target + " pk=" + pk + " original_request_id=" + original_request_id)
+			//console.log("Got forward request: target=" + target + " pk=" + pk + " original_request_id=" + original_request_id)
 			res.status(200).json({"status":true});
 		})
 	}

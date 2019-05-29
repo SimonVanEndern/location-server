@@ -189,7 +189,7 @@ describe('Requests', () => {
 								res.body.should.have.status(true)
 								Repository.getRequests(doc.pk).then(res => {
 									res.should.be.a("array")
-									res.should.have.length(1)
+									res.should.have.length(0)
 									Repository.getRequests(user2).then(res => {
 										res.should.be.a("array")
 										res.should.have.length(1)

@@ -196,7 +196,10 @@ function getUsersPossibleForNewRequest () {
 
 function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 	return openDb().then(db => {
-		return db.collection(DB_AGGREGATION_REQUESTS).findOne({"_id": mongo.ObjectId(original_request_id)})
+		return db.collection(DB_AGGREGATION_REQUESTS).findOne({
+			"_id": mongo.ObjectId(original_request_id),
+			"completed": false
+		})
 	}).then(original => {
 		if (!original) {
 			return Promise.reject("No corresponding request found")
@@ -223,7 +226,7 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 	}).then(deletions => {
 		let query = {"_id": mongo.ObjectId(original_request_id)}
 		let update = {$set: { "completed": true}}
-		return db.collection(DB_USER).updateOne(query, update)
+		return db.collection(DB_AGGREGATION_REQUESTS).updateOne(query, update)
 	}).catch(err => {
 		Promise.reject(err)
 	})
@@ -231,7 +234,10 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 
 function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
 	return openDb().then(db => {
-		return db.collection(DB_AGGREGATION_REQUESTS).findOne({"_id": mongo.ObjectId(original_request_id)})
+		return db.collection(DB_AGGREGATION_REQUESTS).findOne({
+			"_id": mongo.ObjectId(original_request_id),
+			"completed": false
+		})
 	}).then(original => {
 		if (!original) {
 			return Promise.reject("No corresponding request found")
