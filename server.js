@@ -18,9 +18,6 @@ setInterval(function () {
 app.use(express.json({"type": "application/json"}))
 
 function authenticate (req, res, next) {
-	console.log("Authenticating ...")
-	next()
-	return
 	let user
 	let pw
 
@@ -60,6 +57,8 @@ app.use(function (req, res, next) {
 	} else if (req.method === "GET") {
 		if (!req.query.pk) {
 			console.log("WARNING: No user specified on GET")
+			console.log("REQUEST:")
+			console.log(req)
 		} else {
 			req.query.pk = req.query.pk.replace(/-/g, '+').replace(/_/g, '/').replace(/\+\+\+\+\+/g, '-----')
 			RequestHandling.updateUserTimestamp(req.query.pk)

@@ -83,6 +83,7 @@ function insertSampleAggregationRequest (request, callback) {
 		} else {
 			let tmp = {}
 			tmp.rawRequestId = insertedId
+			tmp.original_start = (new Date()).getTime()
 			tmp.timestamp = (new Date()).getTime()
 			tmp.previousRequest = null
 			tmp.completed = false
@@ -138,6 +139,7 @@ function insertFromExistingRawRequest(requestId) {
 		} else {
 			let tmp = {}
 			tmp.rawRequestId = insertedId
+			tmp.original_start = (new Date()).getTime()
 			tmp.timestamp = (new Date()).getTime()
 			tmp.previousRequest = null
 			tmp.completed = false
@@ -212,6 +214,7 @@ function insertNewRequestAndDeleteOld(pk, data, original_request_id) {
 			data.nextUser = original.users.shift()
 			data.users = original.users
 			data.rawRequestId = original.rawRequestId
+			data.original_start = original.original_start
 			data.timestamp = (new Date()).getTime()
 			data.completed = false
 			data.previousRequest = original_request_id
@@ -250,6 +253,7 @@ function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
 			data.pk = data.nextUser
 			data.nextUser = original.users.shift()
 			data.users = original.users
+			data.original_start = original.original_start
 			data.rawRequestId = original.rawRequestId
 			delete data._id
 			delete data.pw
