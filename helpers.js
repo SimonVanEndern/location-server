@@ -12,14 +12,18 @@ function authenticateUser (req, res, next) {
 	let pw
 
 	if (req.method === "GET") {
-		user = req.query.pk
-		pw = req.query.pw
+		user = req.query.publicKey
+		pw = req.query.password
 	} else {
-		user = req.body.pk
-		pw = req.body.pw
+		user = req.body.publicKey
+		pw = req.body.password
 	}
 	
-	pw = crypto.createHash("sha256").update(pw).digest().toString()
+	try {
+		pw = crypto.createHash("sha256").update(pw).digest().toString()
+	} catch (err) {
+		res.status(401)
+	}
 
 	UserRepository.authenticateUser(user, pw).then(() => {
 		next()

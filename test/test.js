@@ -12,46 +12,7 @@ let expect = chai.expect;
 
 chai.use(chaiHttp);
 //Our parent block
-describe('Users', () => {
-    beforeEach((done) => { //Before each test we empty the database
-        UserRepository.removeAllUsers().then(() => {
-        	done();
-        });
-    });        
-/*
-  * Test the /GET route
-  */
-  	describe('/POST user', () => {
-      	it('it should POST a new user', (done) => {
-      		let user = {"pk": "testUserUnitTest"}
-        	chai.request(server)
-            	.post('/user')
-            	.send(user)
-            	.end((err, res) => {
-                  	res.should.have.status(200);
-                  	res.body.pk.should.have.string(user.pk)
-                  	res.body.pw.should.not.be.empty
-              		done();
-            	});
-  		});
-	});
 
-	describe('/Post existing user', () => {
-		it('it should POST an existing user and fail', (done) => {
-			let user = {"pk":"testUserUnitTest"}
-			UserRepository.createUser(user.pk).then(() => {
-				chai.request(server)
-					.post('/user')
-					.send(user)
-					.end((err, res) => {
-						res.should.have.status(400);
-						res.body.should.be.empty
-						done();
-					});
-			})
-		});
-	});
-});
 
 describe('Repository', () => {
 	describe('Insert new raw aggregation', () => {
@@ -89,12 +50,12 @@ describe('Repository', () => {
 describe('Requests', () => {
 	let user = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp/he1JTafLx5ngpLKe2YL/dCvphetQNg6e2zw6ive+crGwwSkF3oyY7adyGxTWBQOcgBwYg67KJQaIhdgA3noRaSidJBbXPqNBxulr1GFaBq3SZh0l+YbajznU0EaeI/ENElTAs605/jkzMXdtq7cF3kbkdLOi2jLCN42H3C5EDR8UPDMifyrRl66p3IsapTuLVPoBU+lWSsRnxa4ZQuAAJy1OrzdqNFrfF355TD03gi+d/Fz4A29lDtaZ1eXxz9H8RkfCQclXR79D7ih4p7+KNKjm8IisQ6auceBNYaZm9q+TXPN9Wo1tYyGIZOeFp1xddcVk47zJPBprDmHWAGKwIDAQAB\n-----END PUBLIC KEY-----"
 	let privateKey = "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCn+F7UlNp8vHmeCksp7Zgv90K+mF61A2Dp7bPDqK975ysbDBKQXejJjtp3IbFNYFA5yAHBiDrsolBoiF2ADeehFpKJ0kFtc+o0HG6WvUYVoGrdJmHSX5htqPOdTQRp4j8Q0SVMCzrTn+OTMxd22rtwXeRuR0s6LaMsI3jYfcLkQNHxQ8MyJ/KtGXrqncixqlO4tU+gFT6VZKxGfFrhlC4AAnLU6vN2o0Wt8XfnlMPTeCL538XPgDb2UO1pnV5fHP0fxGR8JByVdHv0PuKHinv4o0qObwiKxDpq5x4E1hpmb2r5Nc831ajW1jIYhk54WnXF11xWTjvMk8GmsOYdYAYrAgMBAAECggEADMgWl0CYe6Nv8bnAzHj6+rNrDcvUcRvHtSVUZ5AfgmMt4YoCo5+xxhyrvSMANe4dTLhOgeaW7UjQq5Os4cCtHpH0Jq6sMeL/MGX1eF0Ax0aEuz1fdj22AKo5l3+z1UbVG7d+ihHUsSPakmnx4CZ22u8aIdYlAFFWuFYerQKs4Od6Cl037iesEuD5i9YdFJ1xbrX9M1yJuosEDMvpoz2XYTqABQT4VTibcZSI9IDEc0FSQNuYboqWSp3YgPbVhxGq3zzDtSY62AYBw9Qep/R49ykEBUGwKBWZIurZ2IUw5ycGSPdnDEM+WF91NsnGqBONf8BlylgdTvZTCmcKKTTF2QKBgQDpc/GWqn+JoM4337FPLbIHf7do3FjiZKrI5gF/lAxtJwhQqKNJOIc0Citr/SrlIcnFCOkSAPb1RBaHrq7MK1287dLhlER6xsQUvzfYSTSSmBnqXkGw9udP5S+A0QPwowLlwe456CtuhS6N40/BmjMFIDSCmd6B/Z52GbQfmpT7lwKBgQC4MWKwLlunsqnL2yZU7b3GcJB2iBmGlm5LfaOk+/Mcb4tX11LWblCZqe9KimIErf8w6aF5VLiLF7UUBF9tmzmvIbB5hCLGzkk71rvc6YauuMeiSq4d1tB7aQXBeeOlaHb4TlgpyOZO3z4e/CF7EAoZXVAFlo6lefgEAYKfyvisjQKBgQCYcFculMKW8eP2ZCD5nNMFRoZS+J8ppaZHbLlJvzimBbjOQm/tHfZbKtDTwQrDd96yxHC8iti3qvAzRQNq2l5pQbpUBmb47NWY3ovutU6Y8qzpdwbaMT810mfEa7dw6GC5+no+YbYKgvi1OdsYhkIOdMsVBLhglWVlpL8Ta/MgnQKBgCGcaWzK2NDOKmvXrrP6uhGXAtWOWlIT60Z9Q7pce21p8VxzH1ufv7d6qf7JJ7/A3HtZdqzER/Shu9pOPferRqhtll1mPk5W4Eg6FAfo2TnS4CL+S62IQHz0midHDcJmQKdo7G+biGNGG3jd+2IQeDdOrsaGRbtueVKJ0ANGr4AVAoGBAMrrcxO/JAgEOZm916eS07Vb1jdc8JY2NmCrO+9I9uTls+H/O/Ys0jgTCJaVLYCiRY96XhvhgfFsAV/oo+Z4/x3buUd3PBkdhoFV40HtSgRX3v3wb/HfycHzNnN2p5sptV5n8S2wHdwopuQxXwuACM2XtE4qkq4w04ermYdlKma4\n-----END PRIVATE KEY-----"
-	let pw
+	let password
 	beforeEach((done) => {
 		//privateKey = privateKey.replace(/_/g, '/').replace(/-/g, '+')
 		UserRepository.removeAllUsers().then(() => {
 			UserRepository.createUser(user).then(user => {
-				pw = user.pw
+				password = user.password
 				Repository.deleteAllRequests(() => {
 					Repository.deleteAllResults(() => {
 						done()
@@ -118,7 +79,7 @@ describe('Requests', () => {
 				if (success) {
 					userUrlSafe = user.replace(/\//g, '_').replace(/\+/g, '-')
 					chai.request(server)
-						.get('/requests?pk=' + userUrlSafe + "&pw=" + pw)
+						.get('/requests?pk=' + userUrlSafe + "&password=" + password)
 						.end((err, res) => {
 							if (err) {
 								console.log("Error in request result")
@@ -159,7 +120,7 @@ describe('Requests', () => {
 		})
 	})
 
-	describe('/POST forward', () => {
+	describe.only('/POST forward', () => {
 		let user2 = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApYSaLkMKQz5Bg6owyFZE71Ty5OCryI5HtdbB0mXEBJjaoguuTJkgGSCVDApvfj3fj3MHTgjNW7M10XHlL+Lh05y0ht9+RB8brExZsV4qduKzgppf2o9OA0JQNpG1NDl0Sv7vFIQBN5WJbsvYIx1ZYjfTZfsoRHyyKmbTqtGpJlA+rYEctscFuc4aV3xSod5btOXV+R1NbqtDspWT4AuFxkWF4CWnzvScAtRsiCKj25hYGVfZJnpJsRQtCT278dU7VzK8sUMTpZS+F8C9ZTvB1R/DObQ6yFYCWJAFwMP/g6Ifd//OePv5/B+NN4Uwqlewr4gLYeKvoiySVnCNplljdwIDAQAB\n-----END PUBLIC KEY-----"
 		it('should POST a request to be forwarded', (done) => {
 			let request = {
@@ -175,8 +136,8 @@ describe('Requests', () => {
 					if (success) {
 						request.serverId = doc._id
 						request.nextUser = doc.nextUser
-						request.pk = doc.pk
-						request.pw = pw
+						request.publicKey = doc.pk
+						request.password = password
 						request.n = 3
 						request.value = 3.3
 						request.valueList = []
@@ -188,10 +149,10 @@ describe('Requests', () => {
 							.end((err, res) => {
 								res.should.have.status(200)
 								res.body.should.have.status(true)
-								Repository.getRequests(doc.pk).then(res => {
+								Repository.getRequests(doc.publicKey).then(res => {
 									res.should.be.a("array")
 									res.should.have.length(0)
-									let otherUser = (doc.pk == user2) ? user : user2
+									let otherUser = (doc.publicKey == user2) ? user : user2
 									Repository.getRequests(otherUser).then(res => {
 										res.should.be.a("array")
 										res.should.have.length(1)
@@ -222,8 +183,8 @@ describe('Requests', () => {
 				if (success) {
 					request.serverId = doc._id
 					request.nextUser = doc.nextUser
-					request.pk = doc.pk
-					request.pw = pw
+					request.publicKey = doc.pk
+					request.password = password
 					request.n = 3
 					request.value = 3.3
 

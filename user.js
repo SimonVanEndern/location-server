@@ -43,7 +43,7 @@ function createUserIfPossible(user) {
 	if (!user.publicKey || !user.lastSeen || !user.password) {
 		return null
 	} else {
-		return new User(user.pk, user.lastSeen, user.password)
+		return new User(user.publicKey, user.lastSeen, user.password)
 	}
 }
 

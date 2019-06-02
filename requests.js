@@ -5,10 +5,10 @@ let UserRepository = require('./userRepository')
 	Inserts a new user if possible and sends the attributed password.
 */
 function handleNewUserRequest(req, res) {
-	UserRepository.createUser(req.body.pk).then(user => {
+	UserRepository.createUser(req.body.publicKey).then(user => {
 		res.status(200).json({
-			"pk": user.publicKey,
-			"pw": user.password
+			"publicKey": user.publicKey,
+			"password": user.password
 		})
 	}).catch(err => {
 		console.log(err)
@@ -83,19 +83,15 @@ function handleForwardRequest (req, res) {
 */
 function sendRequests (req, res) {
 	console.log("Got get requests request")
-	let pk = req.query.pk
-	if (!pk) {
-		res.status(400).send("Not ok")
-	} else {
-		Repository.getRequests(pk).then(
-			result => {
-				res.set({
-					'Content-Type' : "text/json"
-				})
-				res.status(200).send(result)
-			}
-		).catch(err => {throw err})
-	}
+	let pk = req.query.publicKey
+	Repository.getRequests(publicKey).then(
+		result => {
+			res.set({
+				'Content-Type' : "text/json"
+			})
+			res.status(200).send(result)
+		}
+	).catch(err => {throw err})
 }
 
 /*

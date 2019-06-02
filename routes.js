@@ -1,4 +1,5 @@
 const Helper = require('./helpers')
+const RequestHandling = require('./requests')
 
 /*
 	Register routes that require user authentication.
@@ -17,7 +18,6 @@ function setRoutes (app) {
 	app.get('/aggregations', RequestHandling.sendAggregations)
 	app.get('/requests', RequestHandling.sendRequests)
 	app.post('/user', RequestHandling.handleNewUserRequest)
-	app.post('/aggregation', RequestHandling.handleAggregationResult)
 	app.post('/forward', RequestHandling.handleForwardRequest)
 	app.post('/admin/sampleRequest', RequestHandling.handleInsertSample)
 	app.all('*', RequestHandling.handleUnknownRequest)

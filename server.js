@@ -18,6 +18,9 @@ Routes.requireUserAuthentication(app,
 	]
 )
 
+//Register the routes of the server
+Routes.setRoutes(app)
+
 //Update each users lastSeen timestamp on each contact.
 app.use(Helper.updateUser)
 

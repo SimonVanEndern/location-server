@@ -190,11 +190,11 @@ function getResults() {
 function getUsersPossibleForNewRequest () {
 	return openDb().then(db => {
 		let oneDay = (new Date()).getTime() - 1000 * 60 * 60 * 24
-		let query = {"lastSignal": {$gt : oneDay}}
-		let sort = {"lastSignal" : -1}
+		let query = {"lastSeen": {$gt : oneDay}}
+		let sort = {"lastSeen" : -1}
 		return db.collection(DB_USER).find(query).sort(sort).toArray()
 	}).then(result => {
-		result = result.map(function (ele) {return ele.pk})
+		result = result.map(function (ele) {return ele.publicKey})
 		result.length = result.length > 10 ? 10 : result.length
 		return new Promise((resolve, reject) => {resolve(result)})
 	})

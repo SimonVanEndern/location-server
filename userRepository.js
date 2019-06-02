@@ -13,7 +13,7 @@ function createUser(publicKey) {
 	let random = Math.random().toString(36)
 	let password = crypto.createHash("sha256").update(random).digest().toString()
 	let lastSeen = (new Date()).getTime()
-	let user = User.create(publicKey, password, lastSeen)
+	let user = User.create(publicKey, lastSeen, password)
 
 	return User.insert(user)
 }
@@ -47,8 +47,8 @@ function updateUserTimestamp (publicKey) {
 	Authenticates a user if possible.
 */
 function authenticateUser(publicKey, password) {
-	let query = {"publicKey": user, "password": password}
-	return User.find(query).then (user => {
+	let query = {"publicKey": publicKey, "password": password}
+	return User.find().then (user => {
 		if (!user) {
 			return Promise.reject("Not authenticated")
 		} else {
