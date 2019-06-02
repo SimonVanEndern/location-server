@@ -48,7 +48,7 @@ function createUserIfPossible(user) {
 }
 
 /*
-	Creates a user according to the user model or return null if the model is not satisfied.
+	Creates a user according to the user model or returns null if the model is not satisfied.
 */
 function createUserFromValuesIfPossible(publicKey, lastSeen, password) {
 	return createUserIfPossible({

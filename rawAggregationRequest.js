@@ -1,3 +1,4 @@
+
 const mongo = require('mongodb')
 const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
 "mongodb://localhost:27017/"
@@ -40,7 +41,7 @@ async function openDb () {
 }
 
 /*
-	Out user model: Only those fields are inserted into the database
+	Our raw aggregation request model: Only those fields are inserted into the database
 */
 function RawAggregationRequest(start, end, type) {
 	this.start = start
@@ -54,7 +55,7 @@ function RawAggregationRequest(start, end, type) {
 }
 
 /*
-	Creates a user according to the user model or return null if the model is not satisfied.
+	Creates a new raw aggregation request according to the model or returns null if the model is not satisfied.
 */
 function createRawAggregationRequestIfPossible(request) {
 	if (
@@ -72,7 +73,7 @@ function createRawAggregationRequestIfPossible(request) {
 }
 
 /*
-	Creates a user according to the user model or return null if the model is not satisfied.
+	Creates a raw aggregation request according to the model or returns null if the model is not satisfied.
 */
 function createRawAggregationRequestFromValuesIfPossible(start, end, type) {
 	return createRawAggregationRequestIfPossible({
@@ -83,8 +84,7 @@ function createRawAggregationRequestFromValuesIfPossible(start, end, type) {
 }
 
 /*
-	Inserts a new user if the passed object satisfies the model requirements.
-	If a user with the same publicKey is already present, no new user is inserted.
+	Inserts a new raw aggregation request if the passed object satisfies the model requirements.
 */
 function insertRawAggregationRequest(request) {
 	let requestToInsert = createRawAggregationRequestIfPossible(request)

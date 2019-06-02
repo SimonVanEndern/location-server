@@ -41,7 +41,7 @@ async function openDb () {
 }
 
 /*
-	Out user model: Only those fields are inserted into the database
+	Our aggregation request model: Only those fields are inserted into the database
 */
 function AggregationRequest(rawRequestId, original_start, previousRequest, publicKey, nextUser, users, encryptionKey, iv, encryptedRequest) {
 	this.rawRequestId = rawRequestId,
@@ -58,7 +58,7 @@ function AggregationRequest(rawRequestId, original_start, previousRequest, publi
 }
 
 /*
-	Creates a user according to the user model or return null if the model is not satisfied.
+	Creates an aggregation request according to the model or returns null if the model is not satisfied.
 */
 function createAggregationRequestIfPossible(request) {
 	if (
@@ -89,7 +89,8 @@ function createAggregationRequestIfPossible(request) {
 }
 
 /*
-	Creates a user according to the user model or return null if the model is not satisfied.
+	Creates an aggregation request according to the model or returns null if the model is not satisfied.
+	Also returns null, if the userList is empty.
 */
 function createAggregationRequestFromRawRequestIfPossible(raw, userList) {
 	if (!userList || !userList.length || userList.length <= 1) {
@@ -112,6 +113,9 @@ function createAggregationRequestFromRawRequestIfPossible(raw, userList) {
 	})
 }
 
+/*
+	Creates an object of the aggregation request fields to be encrypted for the end user.
+*/
 function toPlainRawRequest (request) {
 	return {
 		"start": request.start,
@@ -123,6 +127,11 @@ function toPlainRawRequest (request) {
 	}
 }
 
+/*
+	Creates a synchronous key,
+	encryptes this key with the public key
+	and encrypts the request with the synchronous key.
+*/
 function encryptRequest (request, publicKey) {
 	// Create a synchronous key for hybrid encryption
 	let synchronousKey = crypto.randomBytes(32).toString('base64')
@@ -149,8 +158,7 @@ function encryptRequest (request, publicKey) {
 }
 
 /*
-	Inserts a new user if the passed object satisfies the model requirements.
-	If a user with the same publicKey is already present, no new user is inserted.
+	Inserts a new aggregation request if the passed object satisfies the model requirements.
 */
 function insertAggregationRequest(request, userList) {
 	let requestToInsert = createAggregationRequestFromRawRequestIfPossible(request, userList)
