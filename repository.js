@@ -284,6 +284,7 @@ function cleanUp () {
 		requests.forEach(ele => {
 			if (ele.previousRequest) {
 				let query = {"_id" : mongo.ObjectId(ele.previousRequest)}
+				// Update user list and exclude not responding user!
 				let update = {$set : {"completed": false}}
 				db.collection(DB_AGGREGATION_REQUESTS).updateOne(query, update).then(res => {
 					pendingRequests.push(db.collection(DB_AGGREGATION_REQUESTS).deleteOne({"_id": ele._id}))

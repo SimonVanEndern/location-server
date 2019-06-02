@@ -1,96 +1,58 @@
-const mongo = require('mongodb')
 const crypto = require("crypto")
-const User = require('./userSchema')
-const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
-"mongodb://localhost:27017/"
-const mongoClient = mongo.MongoClient
+const User = require('./user')
 
-const DB = "app"
-const DB_USER = "users"
-
-let conn = null
-let db = null
-
-async function openDb () {
-	if (!conn) {
-		conn = mongoClient.connect(url, {"useNewUrlParser":true})
-	}
-	if (!db) {
-		return conn.then(conn => {
-			db = conn.db(DB)
-			return db
-		})
-	}
-	return Promise.resolve(db)
-}
-
-// Only for testing
+// Only for testing. Removes all users from the database.
 function removeAllUsers() {
-	return openDb().then(db => {
- 		let result = db.collection(DB_USER).deleteMany({})
- 		return result
- 	})
+	return User.removeAll()
 }
 
-function createUser(pk) {
-	let pw = Math.random().toString(36)
-	return openDb().then(db => {
-	 	 	return db.collection(DB_USER).findOne({"pk":pk})
-	}).then(foundUser => {
-		if(!foundUser) {
-	 		return db.collection(DB_USER).insertOne(User.fromObject({
-	 			"pk": pk,
-	 			"lastSignal": (new Date()).getTime(),
-	 			"pw": crypto.createHash("sha256").update(pw).digest().toString()
-	 		}))
-		} else {
-			return Promise.reject("`User ${pk} already present`")
-		}
-	}).then(user => {
-		if (!user) {
-			Promise.reject("Error creating user")
-		} else {
-			return Promise.resolve(user.ops[0])
-		}
-	}).catch(err => {
-		console.log(err)
-		//console.error(err)
-		return Promise.reject("Error in creating user")
+/*
+	Inserts a new user into the database if there is not already a user with the specified public key.
+*/
+function createUser(publicKey) {
+	let random = Math.random().toString(36)
+	let password = crypto.createHash("sha256").update(random).digest().toString()
+	let lastSeen = (new Date()).getTime()
+	let user = User.create(publicKey, password, lastSeen)
+
+	return User.insert(user)
+}
+
+/*
+	Retrieves the most recently active @limit users from the database.
+	The list is sorted in descending order regarding the lastSeen timestamp of the user.
+*/
+function getLastSeenUsers (limit) {
+		let oneDayBefore = (new Date()).getTime() - 1000 * 60 * 60 * 24
+		let query = {"lastSeen": {$gt : oneDayBefore}}
+		// -1 for descending order
+		let sort = {"lastSeen" : -1}
+	return User.get(query, sort).then(result => {
+		result = result.map(function (ele) {return ele.publicKey})
+		result.length = result.length > limit ? limit : result.length
+		return Promise.resolve(result)
 	})
 }
 
-function getUsersPossibleForNewRequest () {
-	return openDb().then(db => {
-		let oneDay = (new Date()).getTime() - 1000 * 60 * 60 * 24
-		let query = {"lastSignal": {$gt : oneDay}}
-		let sort = {"lastSignal" : -1}
-		return db.collection(DB_USER).find(query).sort(sort).toArray()
-	}).then(result => {
-		result = result.map(function (ele) {return ele.pk})
-		result.length = result.length > 10 ? 10 : result.length
-		return new Promise((resolve, reject) => {resolve(result)})
-	})
+/*
+	Updates the "last seen" timestamp of the user identified by the public key.
+*/
+function updateUserTimestamp (publicKey) {
+	let query = {"publicKey": publicKey}
+	let update = {$set: { "lastSeen": (new Date()).getTime()}}
+	return User.update(query, update)
 }
 
-function updateUserTimestamp (pk) {
-	openDb().then(db => {
-		let query = {"pk": pk}
-		let update = {$set: { "lastSignal": (new Date()).getTime()}}
-		return db.collection(DB_USER).updateOne(query, update)
-	}).catch(err => {
-		console.error(err)
-	})
-}
-
-function authenticateUser(user, pw) {
-	return openDb().then(db => {
-		let query = {"pk": user, "pw": pw}
-		return result = db.collection(DB_USER).findOne()
-	}).then (user => {
+/*
+	Authenticates a user if possible.
+*/
+function authenticateUser(publicKey, password) {
+	let query = {"publicKey": user, "password": password}
+	return User.find(query).then (user => {
 		if (!user) {
 			return Promise.reject("Not authenticated")
 		} else {
-			return Promise.resolve(user)
+			return Promise.resolve()
 		}
 	})
 }
@@ -100,5 +62,5 @@ module.exports = {
 	authenticateUser : authenticateUser,
 	removeAllUsers : removeAllUsers,
 	updateUserTimestamp : updateUserTimestamp,
-	getUsersPossibleForNewRequest: getUsersPossibleForNewRequest
+	getLastSeenUsers: getLastSeenUsers
 }
