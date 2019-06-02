@@ -43,11 +43,9 @@ function sendAggregations (req, res) {
 		res.set({
 			'Content-Type': 'text/json'
 		})
-		console.log("Sending result: ")
-		console.log(result)
 		res.status(200).send(result)
 	}).catch(error => {
-		throw err
+		res.status(500).end();
 	})
 }
 
@@ -82,42 +80,28 @@ function handleForwardRequest (req, res) {
 	Sending all aggregation requests stored for the specified user.
 */
 function sendRequests (req, res) {
-	console.log("Got get requests request")
-	let pk = req.query.publicKey
-	Repository.getRequests(publicKey).then(
+	Repository.getRequests(req.query.publicKey).then(
 		result => {
 			res.set({
 				'Content-Type' : "text/json"
 			})
 			res.status(200).send(result)
 		}
-	).catch(err => {throw err})
+	).catch(err => {
+		res.status(500).end();
+	})
 }
 
 /*
 	Handling an admin request to insert a new aggregation request.
 */
 function handleInsertSample (req, res) {
-	console.log("Handling sample insert")
 	//TODO: Restrict to admin only
-	pk = req.body.pk
-	request = req.body.request
-	if (!request) {
-		res.status(400).send("Not ok")
-		return
-	}
-	request.pk = pk
-	if (pk == undefined) {
-		res.status(400).send("Not ok")
-	} else {
-		Repository.insertSampleAggregationRequest(request, (success) => {
-			if (success) {
-				res.status(200).send("Ok")
-			} else {
-				res.status(400).send("Not oki")				
-			}
-		})
-	}
+	Repository.insertSampleAggregationRequest(req.body.request).then(result => {
+		res.status(200).send("Ok")
+	}).catch(err => {
+		res.status(400).send("Not oki")
+	})
 }
 
 function updateUserTimestamp (pk) {

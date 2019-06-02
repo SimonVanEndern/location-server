@@ -1,5 +1,6 @@
 const crypto = require("crypto")
 const User = require('./user')
+const RawAggregationRequest = require('./rawAggregationRequest')
 
 // Only for testing. Removes all users from the database.
 function removeAllUsers() {
@@ -57,8 +58,13 @@ function authenticateUser(publicKey, password) {
 	})
 }
 
+function createRawRequest (request) {
+	return RawAggregationRequest.insert(request)
+}
+
 module.exports = {
 	createUser : createUser,
+	createRawRequest : createRawRequest,
 	authenticateUser : authenticateUser,
 	removeAllUsers : removeAllUsers,
 	updateUserTimestamp : updateUserTimestamp,

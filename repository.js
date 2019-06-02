@@ -2,7 +2,9 @@ var exports = {}
 
 const mongo = require('mongodb')
 const crypto = require("crypto")
-const User = require('./userSchema')
+const User = require('./user')
+const RawAggregationRequest = require('./rawAggregationRequest')
+const AggregationRequest = require('./aggregationRequest')
 const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
 "mongodb://localhost:27017/"
 const mongoClient = mongo.MongoClient
@@ -30,22 +32,16 @@ async function openDb () {
 }
 
 // Only for testing
-function deleteAllRequests(callback) {
-	 openDb().then(db => {
-	 		return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({})
-	 	})
-	 	.then(res => {
-	 		callback()
-	 	}).catch(err => {
-	 		throw err
-	 	})
+function deleteAllRequests() {
+	return openDb().then(db => {
+ 		return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({})
+ 	})
 }
 
-function deleteAllResults (callback) {
-	openDb().then(db => {
-		db.collection(DB_AGGREGATION_RESULTS).deleteMany({}, (err, res) => {
-			callback()
-		})
+// Only for testing
+function deleteAllResults () {
+	return openDb().then(db => {
+		return db.collection(DB_AGGREGATION_RESULTS).deleteMany({})
 	})
 }
 
@@ -54,69 +50,21 @@ function insertNewRawRequest (request) {
 		return Promise.reject("Missing required fields")
 	}
 
-	return openDb().then(db => {
-		return db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(request)
-	}).then(result => {
-		if (result.ops[0]) {
-			return new Promise((reject, resolve) => {resolve(result.ops[0])})
-		} else {
-			return new Promise((reject, resolve) => {reject("Unsuccessful insertion")})
-		}
-	}).catch(err => {
-		return new Promise((reject, resolve) => {reject(err)})
-	})
+	return RawAggregationRequest.insert(request)
 }
 
-function insertSampleAggregationRequest (request, callback) {
+function insertSampleAggregationRequest (request) {
 	let successfullyInsertedRequest = null
-	openDb().then(db => {
- 		request.timestamp = (new Date()).getTime()
- 		request.completed = false
- 		let insertedRequest = db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(request)
- 		let possibleUsers = getUsersPossibleForNewRequest()
- 		return Promise.all([insertedRequest, possibleUsers])
-	}).then(res => {
+	let insertedRequest = RawAggregationRequest.insert(request)
+	let possibleUsers = getLastSeenUsers(10)
+	return Promise.all([insertedRequest, possibleUsers]).then(res => {
 		let insertedId = res[0].insertedId
 		let users = res[1]
-		if (users.length == 0) {
-			callback(false)
-		} else {
-			let tmp = {}
-			tmp.rawRequestId = insertedId
-			tmp.original_start = (new Date()).getTime()
-			tmp.timestamp = (new Date()).getTime()
-			tmp.previousRequest = null
-			tmp.completed = false
-			tmp.pk = users.shift()
-			tmp.nextUser = users.shift()
-			if (tmp.nextUser == undefined) {
-				tmp.nextUser = null
-			}
-			tmp.users = users
-			let synchronousKey = crypto.randomBytes(32).toString('base64')
-			tmp.sync = synchronousKey
-			let iv = Buffer.alloc(16) // iv should be 16
-			iv = Buffer.from(Array.prototype.map.call(iv, () => {return Math.floor(Math.random() * 256)}))
-			let keyString = "-----BEGIN PUBLIC KEY-----\n" + tmp.pk + "\n-----END PUBLIC KEY-----"
-			let key = {"key": tmp.pk, "padding": crypto.constants.RSA_PKCS1_PADDING}
-			tmp.encryptionKey = crypto.publicEncrypt(key, Buffer.from(synchronousKey, 'base64')).toString('base64')
-			tmp.iv = iv.toString('base64')
-			let cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(synchronousKey, 'base64'), iv)
-			let crypted = cipher.update(JSON.stringify(request), 'utf8', 'base64')
-			crypted += cipher.final('base64')
-			tmp.encryptedRequest = crypted.toString('base64')
-			return db.collection(DB_AGGREGATION_REQUESTS).insertOne(tmp)
-		}
+		return AggregationRequest.insert(rawRequest, users)
 	}).then(insertedRequest => {
-		successfullyInsertedRequest = insertedRequest
-		let query = {"_id": insertedRequest.ops[0].rawRequestId}
+		let query = {"_id": insertedRequest.rawRequestId}
 		let update = {$set : {"completed":true}}
 		return db.collection(DB_AGGREGATION_REQUESTS_RAW).updateOne(query, update)
-	}).then(res => {
-		callback(true, successfullyInsertedRequest.ops[0])
-	}).catch(err => {
-		console.log("Could not create aggregation request. Could not retrieve possible users")
-		console.log(err)
 	})
 }
 
@@ -126,7 +74,7 @@ function insertFromExistingRawRequest(requestId) {
 	openDb().then(db => {
  		let query = {"_id": requestId}
  		let insertedRequest = db.collection(DB_AGGREGATION_REQUESTS_RAW).find(query).toArray()
- 		let possibleUsers = getUsersPossibleForNewRequest()
+ 		let possibleUsers = getLastSeenUsers(10)
  		return Promise.all([insertedRequest, possibleUsers])
 	}).then(res => {
 		request = res[0][0]
@@ -187,16 +135,15 @@ function getResults() {
 	})
 }
 
-function getUsersPossibleForNewRequest () {
-	return openDb().then(db => {
-		let oneDay = (new Date()).getTime() - 1000 * 60 * 60 * 24
-		let query = {"lastSeen": {$gt : oneDay}}
+function getLastSeenUsers (limit) {
+		let oneDayBefore = (new Date()).getTime() - 1000 * 60 * 60 * 24
+		let query = {"lastSeen": {$gt : oneDayBefore}}
+		// -1 for descending order
 		let sort = {"lastSeen" : -1}
-		return db.collection(DB_USER).find(query).sort(sort).toArray()
-	}).then(result => {
+	return User.get(query, sort).then(result => {
 		result = result.map(function (ele) {return ele.publicKey})
-		result.length = result.length > 10 ? 10 : result.length
-		return new Promise((resolve, reject) => {resolve(result)})
+		result.length = result.length > limit ? limit : result.length
+		return Promise.resolve(result)
 	})
 }
 
@@ -317,7 +264,6 @@ exports.getRequests = getRequests
 exports.insertNewRequestAndDeleteOld = insertNewRequestAndDeleteOld
 exports.insertNewAggregationAndDeleteRequest = insertNewAggregationAndDeleteRequest
 exports.getResults = getResults
-exports.getUsersPossibleForNewRequest = getUsersPossibleForNewRequest
 exports.deleteAllRequests = deleteAllRequests
 exports.insertNewRawRequest = insertNewRawRequest
 exports.deleteAllResults = deleteAllResults

@@ -120,7 +120,7 @@ describe('Requests', () => {
 		})
 	})
 
-	describe.only('/POST forward', () => {
+	describe('/POST forward', () => {
 		let user2 = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApYSaLkMKQz5Bg6owyFZE71Ty5OCryI5HtdbB0mXEBJjaoguuTJkgGSCVDApvfj3fj3MHTgjNW7M10XHlL+Lh05y0ht9+RB8brExZsV4qduKzgppf2o9OA0JQNpG1NDl0Sv7vFIQBN5WJbsvYIx1ZYjfTZfsoRHyyKmbTqtGpJlA+rYEctscFuc4aV3xSod5btOXV+R1NbqtDspWT4AuFxkWF4CWnzvScAtRsiCKj25hYGVfZJnpJsRQtCT278dU7VzK8sUMTpZS+F8C9ZTvB1R/DObQ6yFYCWJAFwMP/g6Ifd//OePv5/B+NN4Uwqlewr4gLYeKvoiySVnCNplljdwIDAQAB\n-----END PUBLIC KEY-----"
 		it('should POST a request to be forwarded', (done) => {
 			let request = {

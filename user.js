@@ -124,7 +124,7 @@ module.exports = {
 	removeAll : removeAllUsers,
 	insert : insertUser,
 	create : createUserFromValuesIfPossible,
-	get : getUsers,
+	"get" : getUsers,
 	update: updateOneUser,
 	find: findOneUser
 }
