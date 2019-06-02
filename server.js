@@ -1,94 +1,36 @@
 const express = require('express')
-const crypto = require('crypto')
 const app = express()
 const port = 8888
-const fs = require('fs')
-app.set('port', process.env.PORT || port);
-const Repository = require('./repository')
-const UserRepository = require('./userRepository')
-const RequestHandling = require('./requests')
+const Helper = require('./helpers')
+const Routes = require('./routes')
 
-setTimeout(function () {
-	Repository.cleanUp()
-}, 1000 * 60)
-setInterval(function () {
-	Repository.cleanUp()
-}, 1000 * 60 * 60); 
+//Reroute aggregation requests that have been pending for more than a certain time.
+Helper.runCleanUpJob()
 
-// Populate database with sample data for pk = "xyz"
-// Repository.insertSampleAggregationRequest()
-
+//Parse json body into req.body
 app.use(express.json({"type": "application/json"}))
 
-function authenticate (req, res, next) {
-	let user
-	let pw
+//Update each users lastSeen timestamp on each contact.
+app.use(Helper.updateUser)
 
-	if (req.method === "GET") {
-		user = req.query.pk
-		pw = req.query.pw
-	} else {
-		user = req.body.pk
-		pw = req.body.pw
-	}
-	if (!user || !pw) {
-		console.log("Authentication failed")
-		res.status(401).json({"status":false})
-		return
-	}
+//Set routes that require user authentication.
+Routes.requireUserAuthentication(app,
+	[
+		'/requests',
+		'/forward'
+	]
+)
 
-	pw = crypto.createHash("sha256").update(pw).digest().toString()
 
-	//console.log("Try authentication ...")
+//Register the routes of the server
+Routes.setRoutes(app)
 
-	UserRepository.authenticateUser(user, pw).then(() => {
-		next()
-	}).catch(err => {
-		console.log("Authentication failed")
-		res.status(401).json({"status":false})
-	})
-}
 
-app.use(function (req, res, next) {
-	if (req.method === "POST") {
-		if (!req.body.pk) {
-			console.log("WARNING: No user specified on POST")
-		} else {
-			//req.body.pk = req.body.pk.replace(/-/g, '+').replace(/_/g, '/')
-			RequestHandling.updateUserTimestamp(req.body.pk)
-		}
-	} else if (req.method === "GET") {
-		if (!req.query.pk) {
-			console.log("WARNING: No user specified on GET")
-			console.log("REQUEST:")
-			console.log(req.query)
-		} else {
-			req.query.pk = req.query.pk.replace(/-/g, '+').replace(/_/g, '/').replace(/\+\+\+\+\+/g, '-----')
-			RequestHandling.updateUserTimestamp(req.query.pk)
-		}
-	}
-	next()
-})
-
-app.use('/requests', authenticate)
-app.use('/forward', authenticate)
-
-app.get('/', RequestHandling.handleBasicGetRequest)
-app.get('/users', RequestHandling.sendUsers)
-app.get('/info', RequestHandling.sendAPIInfo)
-app.get('/aggregations', RequestHandling.sendAggregations)
-app.get('/stats', RequestHandling.sendStatistics)
-app.get('/requests', RequestHandling.sendRequests)
-app.post('/user', RequestHandling.handleNewUserRequest)
-app.post('/aggregation', RequestHandling.handleAggregationResult)
-app.post('/forward', RequestHandling.handleForwardRequest)
-app.post('/admin/sampleRequest', RequestHandling.handleInsertSample)
-app.get('/test', RequestHandling.testing)
-app.all('*', RequestHandling.handleUnknownRequest)
-
-const server = app.listen(app.get('port'), function () {
+//Set (local) port and start server
+app.set('port', process.env.PORT || port);
+app.listen(app.get('port'), function () {
 	console.log("Server listening on port " + port)
 })
 
-// For Testings
+// For Testings with mocha
 module.exports = app
