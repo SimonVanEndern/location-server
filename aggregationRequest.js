@@ -113,6 +113,20 @@ function createAggregationRequestFromRawRequestIfPossible(raw, userList) {
 	})
 }
 
+function createAggregationRequestFromAggregationRequestIfPossible (request) {
+	return createAggregationRequestIfPossible({
+		"rawRequestId": request.rawRequestId,
+		"original_start": request.original_start,
+		"previousRequest": request.id,
+		"publicKey" : request.nextUser,
+		"nextuser": request.users.length == 0 ? null : request.users.shift(),
+		"users" : request.users,
+		"encryptionKey": request.encryptionKey,
+		"iv": request.iv,
+		"encryptedRequest": request.encryptedRequest
+	})
+}
+
 /*
 	Creates an object of the aggregation request fields to be encrypted for the end user.
 */
@@ -173,7 +187,36 @@ function insertAggregationRequest(request, userList) {
 	}
 }
 
+/*
+	Retrieve all aggregation requests that match the mongoDB query object.
+*/
+function getAggregationRequests (query) {
+	return openDb().then(db => {
+		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
+	})
+}
+
+/*
+	Update one aggregation request that matches the mongoDB query object. 
+	The mongoDB update object specifies which values to update.
+*/
+function updateOneAggregationRequest(query, update) {
+	return openDb().then(db => {
+		return db.collection(DB_AGGREGATION_REQUESTS).updateOne(query, update)
+	})
+}
+
+function deleteByRawId(rawRequestId) {
+	return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({
+		"rawRequestId": rawRequestId
+	})	
+}
+
 module.exports = {
 	insert : insertAggregationRequest,
-	create : createAggregationRequestFromRawRequestIfPossible
+	create : createAggregationRequestFromRawRequestIfPossible,
+	fromExistingAggregationRequest : createAggregationRequestFromAggregationRequestIfPossible
+	"get": getAggregationRequests,
+	update: updateOneAggregationRequest,
+	deleteByRawId: deleteByRawId
 }

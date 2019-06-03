@@ -20,7 +20,6 @@ function handleNewUserRequest(req, res) {
 	Send whenever a request does not match any of the specified routes.
 */
 function handleUnknownRequest (req, res) {
-	console.log("Got unknown request")
 	res.status(404).end()
 }
 

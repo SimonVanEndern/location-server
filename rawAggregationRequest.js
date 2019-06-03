@@ -51,7 +51,7 @@ function RawAggregationRequest(start, end, type) {
 	this.value = 0
 	this.valueList = []
 	this.timestamp = (new Date()).getTime()
-	this.completed = false
+	this.started = false
 }
 
 /*
@@ -97,7 +97,17 @@ function insertRawAggregationRequest(request) {
 	}
 }
 
+/*
+	Retrieve all raw aggregation requests that match the mongoDB query object and sort them accordingly by the mongoDB sort object.
+*/
+function getRawAggregationRequests (query, sort) {
+	return openDb().then(db => {
+		return db.collection(DB_AGGREGATION_REQUESTS_RAW).find(query).sort(sort).toArray()
+	})
+}
+
 module.exports = {
 	insert : insertRawAggregationRequest,
+	"get": getRawAggregationRequests,
 	create : createRawAggregationRequestFromValuesIfPossible
 }

@@ -56,8 +56,8 @@ describe('Requests', () => {
 		UserRepository.removeAllUsers().then(() => {
 			UserRepository.createUser(user).then(user => {
 				password = user.password
-				Repository.deleteAllRequests(() => {
-					Repository.deleteAllResults(() => {
+				Repository.deleteAllRequests().then(() => {
+					Repository.deleteAllResults().then(() => {
 						done()
 					})
 				})
