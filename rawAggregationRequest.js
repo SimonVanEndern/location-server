@@ -106,8 +106,19 @@ function getRawAggregationRequests (query, sort) {
 	})
 }
 
+/*
+	Update one raw aggregation request that matches the mongoDB query object. 
+	The mongoDB update object specifies which values to update.
+*/
+function updateOneRawAggregationRequest(query, update) {
+	return openDb().then(db => {
+		return db.collection(DB_AGGREGATION_REQUESTS_RAW).updateOne(query, update)
+	})
+}
+
 module.exports = {
 	insert : insertRawAggregationRequest,
 	"get": getRawAggregationRequests,
-	create : createRawAggregationRequestFromValuesIfPossible
+	create : createRawAggregationRequestFromValuesIfPossible,
+	update: updateOneRawAggregationRequest
 }

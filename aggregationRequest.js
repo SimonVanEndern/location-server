@@ -212,11 +212,26 @@ function deleteByRawId(rawRequestId) {
 	})	
 }
 
+function deleteById(requestid) {
+	return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({
+		"_id": requestid
+	})	
+}
+
+// Only for testing
+function deleteAllRequests() {
+	return openDb().then(db => {
+ 		return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({})
+ 	})
+}
+
 module.exports = {
 	insert : insertAggregationRequest,
 	create : createAggregationRequestFromRawRequestIfPossible,
 	fromExistingAggregationRequest : createAggregationRequestFromAggregationRequestIfPossible
 	"get": getAggregationRequests,
 	update: updateOneAggregationRequest,
-	deleteByRawId: deleteByRawId
+	deleteByRawId: deleteByRawId,
+	deleteById: deleteById
+	deleteAllRequests: deleteAllRequests
 }

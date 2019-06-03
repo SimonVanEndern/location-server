@@ -1,51 +1,40 @@
-const mongo = require('mongodb')
 const User = require('./user')
 const RawAggregationRequest = require('./rawAggregationRequest')
 const AggregationRequest = require('./aggregationRequest')
-const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
-"mongodb://localhost:27017/"
-const mongoClient = mongo.MongoClient
-
-const DB = "app"
-const DB_AGGREGATION_REQUESTS_RAW = "rawAggregationRequests"
-const DB_AGGREGATION_REQUESTS = "aggregationRequests"
-const DB_AGGREGATION_RESULTS = "aggregationResults"
-
-let conn = null
-let db = null
-
-async function openDb () {
-	if (!conn) {
-		conn = mongoClient.connect(url, {"useNewUrlParser":true})
-	}
-	if (!db) {
-		return conn.then(conn => {
-			db = conn.db(DB)
-			return db
-		})
-	}
-	return Promise.resolve(db)
-}
+const AggregationResult = require('./aggregationResult')
 
 // Only for testing
 function deleteAllRequests() {
-	return openDb().then(db => {
- 		return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({})
- 	})
+	return AggregationRequest.deleteAllRequests()
 }
 
 // Only for testing
 function deleteAllResults () {
-	return openDb().then(db => {
-		return db.collection(DB_AGGREGATION_RESULTS).deleteMany({})
-	})
+	return AggregationResult.deleteAllResults()
 }
 
+/*
+	Returns all results stored in the database
+*/
+function getResults() {
+	return AggregationResult.get()
+}
+
+function createRawRequest (request) {
+	return RawAggregationRequest.insert(request)
+}
+
+/*
+	Inserts a new raw request and triggers processing raw aggregation requests to aggregation requests
+*/
 function insertNewRawRequest (request) {
 	return RawAggregationRequest.insert(request)
 	buildAggregationRequestsFromRaw()
 }
 
+/*
+	Builds the initial aggregation request for a first user from all pending raw aggregation requests.
+*/
 function buildAggregationRequestsFromRaw () {
 	let possibleUsers = getLastSeenUsers(10)
 	// It is valid to have today as end date as it will be treated as today 00:00 o'clock
@@ -59,10 +48,13 @@ function buildAggregationRequestsFromRaw () {
 	}).then(insertedRequests => {
 		let queries = insertedRequests.map(insertion => {"_id": insertion.rawRequestId})
 		let update = {$set : {"started":true}}
-		return Promise.all(queries.map(query => db.collection(DB_AGGREGATION_REQUESTS_RAW).updateOne(query, update))
+		return Promise.all(queries.map(query => RawAggregationRequest.updateOne(query, update))
 	})
 }
 
+/*
+	Get all aggregation requests for the specified user that have not been served yet.
+*/
 function getOpenAggregationRequests(publicKey) {
 	let query = {"publicKey":publicKey, "completed": false}
 	return AggregationRequest.getAggregationRequests(query).then(requests => {
@@ -72,12 +64,6 @@ function getOpenAggregationRequests(publicKey) {
 		}
 
 		return Promise.resolve(result)
-	})
-}
-
-function getResults() {
-	return openDb().then(db => {
-		return db.collection(DB_AGGREGATION_RESULTS).find().toArray()
 	})
 }
 
@@ -93,7 +79,10 @@ function getLastSeenUsers (limit) {
 	})
 }
 
-function insertNewRequest(pk, data, original_request_id) {
+/*
+	Inserts a new aggregation request from a served previous aggregation request.
+*/
+function insertNewAggregationRequest(pk, data, original_request_id) {
 	let query = {
 			"_id": mongo.ObjectId(original_request_id),
 			"completed": false
@@ -114,50 +103,44 @@ function insertNewRequest(pk, data, original_request_id) {
 	})
 }
 
-function insertNewAggregationAndDeleteRequests (pk, data, original_request_id) {
+/*
+	Inserts a new aggregation result from a served aggregation request.
+	Also deletes all aggregation requests linked to the corresponding raw request.
+*/
+function insertNewAggregationResultAndDeleteRequests (pk, data, original_request_id) {
 	let query = {
-			"_id": mongo.ObjectId(original_request_id),
-			"completed": false
-		}
+		"_id": mongo.ObjectId(original_request_id),
+		"completed": false
+	}
 	return AggregationRequest.get(query).then(original => {
 		if (!original) {
 			return Promise.reject("No corresponding request found")
 		} else {
-			data.pk = data.nextUser
-			data.nextUser = original.users.shift()
-			data.users = original.users
-			data.original_start = original.original_start
-			data.rawRequestId = original.rawRequestId
-			delete data._id
-			delete data.pw
-			let result = {"timestamp":(new Date()).getTime(), "data": data}
-			return db.collection(DB_AGGREGATION_RESULTS).insertOne(result)
+			return AggregationResult.insert(data)
 		}
 	}).then(insertedResult => {
-		rawRequestId = insertedResult.ops[0].data.rawRequestId
+		rawRequestId = insertedResult.rawRequestId
 		return AggregationRequest.deleteByRawId(rawRequestId)
 	})
 }
 
 function cleanUp () {
-	openDb().then(db => {
-		let query = {"completed": false, timestamp : {$lt : (new Date()).getTime() - 1000 * 60 * 60 * 18}}
-		return AggregationRequest.get(query)
-	}).then(requests => {
+	let query = {"completed": false, timestamp : {$lt : (new Date()).getTime() - 1000 * 60 * 60 * 18}}
+	return AggregationRequest.get(query).then(requests => {
 		let pendingRequests = []
 		requests.forEach(ele => {
 			if (ele.previousRequest) {
 				let query = {"_id" : mongo.ObjectId(ele.previousRequest)}
 				// Update user list and exclude not responding user!
 				let update = {$set : {"completed": false}}
-				db.collection(DB_AGGREGATION_REQUESTS).updateOne(query, update).then(res => {
-					pendingRequests.push(db.collection(DB_AGGREGATION_REQUESTS).deleteOne({"_id": ele._id}))
+				AggregationRequest.update(query, update).then(res => {
+					AggregationRequest.deleteById(ele._id)
 				})
 			} else {
 				let query = {"_id": mongo.ObjectId(ele.rawRequestId)}
 				let update = {$set : {"started": false}}
-				db.collection(DB_AGGREGATION_REQUESTS_RAW).updateOne(query, update).then(res => {
-					pendingRequests.push(db.collection(DB_AGGREGATION_REQUESTS).deleteOne({"_id": ele._id}))
+				RawAggregationRequest.update(query, update).then(res => {
+					AggregationRequest.deleteById(ele._id)
 				})
 			}
 		})
@@ -174,6 +157,7 @@ module.exports = {
 	insertNewRequest: insertNewRequest,
 	deleteAllRequests: deletedRequests,
 	deleteAllResults: deleteAllResults
-	openDb: openDb,
-	cleanUp: cleanUp
+	cleanUp: cleanUp,
+	createRawRequest : createRawRequest,
+	
 }
