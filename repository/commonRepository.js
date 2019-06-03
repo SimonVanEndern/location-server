@@ -62,10 +62,8 @@ function buildAggregationRequestsFromRaw () {
 	Get all aggregation requests for the specified user that have not been served yet.
 */
 function getOpenAggregationRequests(publicKey) {
-	console.log(publicKey)
 	let query = {"publicKey":publicKey, "completed": false}
-	return AggregationRequest.get({}).then(requests => {
-		console.log(requests)
+	return AggregationRequest.get(query).then(requests => {
 		for (request of requests) {
 			request.serverId = request._id
 			delete request._id

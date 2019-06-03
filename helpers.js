@@ -26,7 +26,6 @@ function authenticateUser (req, res, next) {
 	}
 
 	UserRepository.authenticateUser(user, pw).then(() => {
-		console.log("Authenticated")
 		next()
 	}).catch(err => {
 		console.log("Authentication failed")
@@ -39,21 +38,20 @@ function authenticateUser (req, res, next) {
 	Either way, the HTTP request is passed to the next middleware via call to "next()".
 */
 function updateUserLastSeen (req, res, next) {
-	console.log("TIME")
 	if (req.method === "POST") {
-		if (!req.body.pk) {
+		if (!req.body.publicKey) {
 			console.log("WARNING: No user specified on POST")
 		} else {
-			RequestHandling.updateUserTimestamp(req.body.pk)
+			RequestHandling.updateUserTimestamp(req.body.publicKey)
 		}
 	} else if (req.method === "GET") {
-		if (!req.query.pk) {
+		if (!req.query.publicKey) {
 			console.log("WARNING: No user specified on GET")
 			console.log("REQUEST:")
-			console.log(req)
+			console.log(req.query)
 		} else {
-			req.query.pk = req.query.pk.replace(/-/g, '+').replace(/_/g, '/').replace(/\+\+\+\+\+/g, '-----')
-			UserRepository.updateUserTimestamp(req.query.pk)
+			req.query.publicKey = req.query.publicKey.replace(/-/g, '+').replace(/_/g, '/').replace(/\+\+\+\+\+/g, '-----')
+			UserRepository.updateUserTimestamp(req.query.publicKey)
 		}
 	}
 	next()

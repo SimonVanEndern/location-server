@@ -18,11 +18,12 @@ Routes.requireUserAuthentication(app,
 	]
 )
 
+//Update each users lastSeen timestamp on each contact.
+app.use(Helper.updateUser)
+
 //Register the routes of the server
 Routes.setRoutes(app)
 
-//Update each users lastSeen timestamp on each contact.
-app.use(Helper.updateUser)
 
 //Set (local) port and start server
 app.set('port', process.env.PORT || port);

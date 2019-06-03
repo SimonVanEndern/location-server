@@ -79,7 +79,6 @@ function handleForwardRequest (req, res) {
 	Sending all aggregation requests stored for the specified user.
 */
 function sendRequests (req, res) {
-	console.log("Sending")
 	Repository.getRequests(req.query.publicKey).then(
 		result => {
 			res.set({
