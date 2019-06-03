@@ -5,8 +5,8 @@ let crypto = require('crypto')
 let chai = require('chai');
 let chaiHttp = require('chai-http');
 let server = require('../server');
-let Repository = require('../repository');
-let UserRepository = require('../userRepository')
+let Repository = require('../repository/commonRepository');
+let UserRepository = require('../repository/userRepository')
 let should = chai.should();
 let expect = chai.expect;
 
@@ -14,7 +14,7 @@ chai.use(chaiHttp);
 //Our parent block
 
 
-describe('Repository', () => {
+describe.only('Repository', () => {
 	describe('Insert new raw aggregation', () => {
 		it('should insert a new raw aggregation and check for required fields', (done) => {
 			let request = {

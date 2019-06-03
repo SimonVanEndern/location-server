@@ -1,16 +1,16 @@
-const User = require('./user')
-const RawAggregationRequest = require('./rawAggregationRequest')
-const AggregationRequest = require('./aggregationRequest')
-const AggregationResult = require('./aggregationResult')
+const User = require('../model/user')
+const RawAggregationRequest = require('../model/rawAggregationRequest')
+const AggregationRequest = require('../model/aggregationRequest')
+const AggregationResult = require('../model/aggregationResult')
 
 // Only for testing
 function deleteAllRequests() {
-	return AggregationRequest.deleteAllRequests()
+	return AggregationRequest.deleteAll()
 }
 
 // Only for testing
 function deleteAllResults () {
-	return AggregationResult.deleteAllResults()
+	return AggregationResult.deleteAll()
 }
 
 /*
@@ -38,7 +38,7 @@ function insertNewRawRequest (request) {
 function buildAggregationRequestsFromRaw () {
 	let possibleUsers = getLastSeenUsers(10)
 	// It is valid to have today as end date as it will be treated as today 00:00 o'clock
-	let query = {"started": false, "end" : {$lte : (new Date()).(new Date()).toISOString().slice(0,10)}}
+	let query = {"started": false, "end" : {$lte : (new Date()).toISOString().slice(0,10)}}
 	let rawAggregationRequests = RawAggregationRequest.get(query)
 	return Promise.all([rawAggregationRequests, possibleUsers]).then(res => {
 		let requests = res[0]
@@ -46,9 +46,9 @@ function buildAggregationRequestsFromRaw () {
 		let pendingInsertions = requests.map(request => AggregationRequest.insert(request, users))
 		return Promise.all(pendingInsertions)
 	}).then(insertedRequests => {
-		let queries = insertedRequests.map(insertion => {"_id": insertion.rawRequestId})
+		let queries = insertedRequests.map(insertion => {return {"_id": insertion.rawRequestId}})
 		let update = {$set : {"started":true}}
-		return Promise.all(queries.map(query => RawAggregationRequest.updateOne(query, update))
+		return Promise.all(queries.map(query => RawAggregationRequest.update(query, update)))
 	})
 }
 
@@ -57,7 +57,7 @@ function buildAggregationRequestsFromRaw () {
 */
 function getOpenAggregationRequests(publicKey) {
 	let query = {"publicKey":publicKey, "completed": false}
-	return AggregationRequest.getAggregationRequests(query).then(requests => {
+	return AggregationRequest.get(query).then(requests => {
 		for (request of requests) {
 			request.serverId = request._id
 			delete request._id
@@ -67,6 +67,10 @@ function getOpenAggregationRequests(publicKey) {
 	})
 }
 
+/*
+	Retrieves the most recently active @limit users from the database.
+	The list is sorted in descending order regarding the lastSeen timestamp of the user.
+*/
 function getLastSeenUsers (limit) {
 		let oneDayBefore = (new Date()).getTime() - 1000 * 60 * 60 * 24
 		let query = {"lastSeen": {$gt : oneDayBefore}}
@@ -93,7 +97,7 @@ function insertNewAggregationRequest(pk, data, original_request_id) {
 		} else {
 			data.publicKey = data.publicKey
 			data.id = original_request_id
-			let newRequest = AggregationRequest.fromExistingAggregationRequest(data)
+			let newRequest = AggregationRequest.fromAggregationRequest(data)
 			return AggregationRequest.insert(newRequest)
 		}
 	}).then(deletions => {
@@ -153,11 +157,10 @@ function cleanUp () {
 module.exports = {
 	getRequests: getOpenAggregationRequests,
 	insertNewRawRequest: insertNewRawRequest,
-	insertNewAggregationAndDeleteRequest: insertNewAggregationAndDeleteRequest,
-	insertNewRequest: insertNewRequest,
-	deleteAllRequests: deletedRequests,
-	deleteAllResults: deleteAllResults
+	insertNewAggregationRequest: insertNewAggregationRequest,
+	insertNewRawRequest: insertNewRawRequest,
+	deleteAllRequests: deleteAllRequests,
+	deleteAllResults: deleteAllResults,
 	cleanUp: cleanUp,
-	createRawRequest : createRawRequest,
-	
+	createRawRequest : createRawRequest
 }

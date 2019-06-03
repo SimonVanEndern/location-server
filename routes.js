@@ -19,7 +19,7 @@ function setRoutes (app) {
 	app.get('/requests', RequestHandling.sendRequests)
 	app.post('/user', RequestHandling.handleNewUserRequest)
 	app.post('/forward', RequestHandling.handleForwardRequest)
-	app.post('/admin/sampleRequest', RequestHandling.insertNewRawRequest)
+	app.post('/admin/sampleRequest', RequestHandling.handleInsertSample)
 	app.all('*', RequestHandling.handleUnknownRequest)
 }
 

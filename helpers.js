@@ -1,6 +1,6 @@
 const crypto = require('crypto')
-const UserRepository = require('./userRepository')
-const Repository = require('./repository')
+const UserRepository = require('./repository/userRepository')
+const Repository = require('./repository/commonRepository')
 
 /*
 	Authenticating a user. 

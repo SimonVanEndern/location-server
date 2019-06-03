@@ -226,12 +226,12 @@ function deleteAllRequests() {
 }
 
 module.exports = {
+	fromRawRequest : createAggregationRequestFromRawRequestIfPossible,
+	fromAggregationRequest : createAggregationRequestFromAggregationRequestIfPossible,
 	insert : insertAggregationRequest,
-	create : createAggregationRequestFromRawRequestIfPossible,
-	fromExistingAggregationRequest : createAggregationRequestFromAggregationRequestIfPossible
-	"get": getAggregationRequests,
 	update: updateOneAggregationRequest,
+	"get": getAggregationRequests,
 	deleteByRawId: deleteByRawId,
-	deleteById: deleteById
-	deleteAllRequests: deleteAllRequests
+	deleteById: deleteById,
+	deleteAll: deleteAllRequests
 }

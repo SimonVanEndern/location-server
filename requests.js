@@ -1,5 +1,5 @@
-const Repository = require('./repository')
-let UserRepository = require('./userRepository')
+const Repository = require('./repository/commonRepository')
+const UserRepository = require('./repository/userRepository')
 
 /*
 	Inserts a new user if possible and sends the attributed password.
@@ -96,7 +96,7 @@ function sendRequests (req, res) {
 */
 function handleInsertSample (req, res) {
 	//TODO: Restrict to admin only
-	Repository.insertSampleAggregationRequest(req.body.request).then(result => {
+	Repository.insertNewRawRequest(req.body.request).then(result => {
 		res.status(200).send("Ok")
 	}).catch(err => {
 		res.status(400).send("Not oki")

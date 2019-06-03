@@ -105,8 +105,8 @@ function deleteAllResults () {
 }
 
 module.exports = {
+	fromObject : createAggregationResultIfPossible,
 	insert : insertAggregationResult,
-	create : createAggregationResultIfPossible,
 	"get": getAggregationResults,
-	deleteAllResults: deleteAllResults
+	deleteAll: deleteAllResults
 }

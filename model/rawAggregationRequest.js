@@ -1,4 +1,3 @@
-
 const mongo = require('mongodb')
 const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
 "mongodb://localhost:27017/"
@@ -98,9 +97,9 @@ function insertRawAggregationRequest(request) {
 }
 
 /*
-	Retrieve all raw aggregation requests that match the mongoDB query object and sort them accordingly by the mongoDB sort object.
+	Retrieve all raw aggregation requests that match the mongoDB query object.
 */
-function getRawAggregationRequests (query, sort) {
+function getRawAggregationRequests (query) {
 	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_REQUESTS_RAW).find(query).sort(sort).toArray()
 	})
@@ -117,8 +116,8 @@ function updateOneRawAggregationRequest(query, update) {
 }
 
 module.exports = {
+	fromValues : createRawAggregationRequestFromValuesIfPossible,
 	insert : insertRawAggregationRequest,
-	"get": getRawAggregationRequests,
-	create : createRawAggregationRequestFromValuesIfPossible,
-	update: updateOneRawAggregationRequest
+	update: updateOneRawAggregationRequest,
+	"get": getRawAggregationRequests
 }

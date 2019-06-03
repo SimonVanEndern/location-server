@@ -76,11 +76,7 @@ function insertUser(user) {
 				return Promise.reject("`User ${user.publicKey} already present`")
 			}
 		}).then(user => {
-			if (!user) {
-				Promise.reject("Database error creating user")
-			} else {
-				return Promise.resolve(user.ops[0])
-			}
+			return Promise.resolve(user.ops[0])
 		})
 	}
 }
@@ -103,17 +99,8 @@ function updateOneUser(query, update) {
 	})
 }
 
-/*
-	Findn one user that matches the mongoDB query object
-*/
-function findOneUser(query) {
-	return openDb().then(db => {
-		return result = db.collection(DB_USER).findOne(query)
-	})
-}
-
 // Only for testing. Removes all users.
-function removeAllUsers() {
+function deleteAllUsers() {
 	return openDb().then(db => {
  		let result = db.collection(DB_USER).deleteMany({})
  		return result
@@ -121,10 +108,9 @@ function removeAllUsers() {
 }
 
 module.exports = {
-	removeAll : removeAllUsers,
+	fromValues : createUserFromValuesIfPossible,
 	insert : insertUser,
-	create : createUserFromValuesIfPossible,
-	"get" : getUsers,
 	update: updateOneUser,
-	find: findOneUser
+	"get" : getUsers,
+	deleteAll : deleteAllUsers
 }
