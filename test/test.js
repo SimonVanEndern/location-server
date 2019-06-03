@@ -14,7 +14,7 @@ chai.use(chaiHttp);
 //Our parent block
 
 
-describe.only('Repository', () => {
+describe('Repository', () => {
 	describe('Insert new raw aggregation', () => {
 		it('should insert a new raw aggregation and check for required fields', (done) => {
 			let request = {
@@ -40,7 +40,7 @@ describe.only('Repository', () => {
 			Repository.insertNewRawRequest(request).then((result) => {
 				done()
 			}).catch(err => {
-				err.should.have.string("Missing")
+				err.should.have.string("missing or wrong fields")
 				done()
 			})
 		})
@@ -53,19 +53,21 @@ describe('Requests', () => {
 	let password
 	beforeEach((done) => {
 		//privateKey = privateKey.replace(/_/g, '/').replace(/-/g, '+')
-		UserRepository.removeAllUsers().then(() => {
+		UserRepository.deleteAllUsers().then(() => {
 			UserRepository.createUser(user).then(user => {
 				password = user.password
 				Repository.deleteAllRequests().then(() => {
 					Repository.deleteAllResults().then(() => {
-						done()
+						Repository.deleteAllRawRequests().then(() => {
+							done()
+						})
 					})
 				})
 			})
 		})
 	})
 
-	describe('/GET requests for user', () => {
+	describe.only('/GET requests for user', () => {
 		it('it should GET all aggregations for the user', (done) => {
 			let request = {
 				"start"  : "2019-01-01",
@@ -75,47 +77,42 @@ describe('Requests', () => {
 				"value": 0.1
 			}
 
-			Repository.insertSampleAggregationRequest(request, (success,doc) => {
-				if (success) {
-					userUrlSafe = user.replace(/\//g, '_').replace(/\+/g, '-')
-					chai.request(server)
-						.get('/requests?pk=' + userUrlSafe + "&password=" + password)
-						.end((err, res) => {
-							if (err) {
-								console.log("Error in request result")
-								done()
+			Repository.insertNewRawRequest(request).then(doc => {
+				userUrlSafe = user.replace(/\//g, '_').replace(/\+/g, '-')
+				chai.request(server)
+					.get('/requests?publicKey=' + userUrlSafe + "&password=" + password)
+					.end((err, res) => {
+						if (err) {
+							console.log("Error in request result")
+						}
+						res.should.have.status(200)
+						res.body.should.be.a('array')
+						res.body.should.have.lengthOf(1)
+
+						res.body = res.body.map((ele) => {
+							let key = {"key" : privateKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
+							let synchronousKey = crypto.privateDecrypt(key, Buffer.from(ele.encryptionKey, 'base64')).toString('base64')
+							let iv = Buffer.from(ele.iv, 'base64')
+							let decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(synchronousKey, 'base64'), iv)
+							let crypted = decipher.update(Buffer.from(ele.encryptedRequest, 'base64'), 'base64', 'utf8')
+							crypted += decipher.final('utf8')
+							json = JSON.parse(crypted)
+							for (var prop in json) {
+								ele[prop] = json[prop]
 							}
-							res.should.have.status(200)
-							res.body.should.be.a('array')
-							res.body.should.have.lengthOf(1)
-
-							res.body = res.body.map((ele) => {
-								let key = {"key" : privateKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
-								let synchronousKey = crypto.privateDecrypt(key, Buffer.from(ele.encryptionKey, 'base64')).toString('base64')
-								let iv = Buffer.from(ele.iv, 'base64')
-								let decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(synchronousKey, 'base64'), iv)
-								let crypted = decipher.update(Buffer.from(ele.encryptedRequest, 'base64'), 'base64', 'utf8')
-								crypted += decipher.final('utf8')
-								json = JSON.parse(crypted)
-								for (var prop in json) {
-									ele[prop] = json[prop]
-								}
-								return ele
-							})
-
-							res.body[0].should.have.property("type", "steps")
-							res.body[0].should.have.property("start", "2019-01-01")
-							res.body[0].should.have.property("end", "2019-01-02")
-							res.body[0].should.have.property("n", 0)
-							res.body[0].should.have.property("value", 0.1)
-							res.body[0].should.have.property("pk", user)
-							let tmp = (res.body[0].nextUser === null)
-							tmp.should.be.true
-							done()
+							return ele
 						})
-				} else {
-					throw "Failed to set up test"
-				}
+
+						res.body[0].should.have.property("type", "steps")
+						res.body[0].should.have.property("start", "2019-01-01")
+						res.body[0].should.have.property("end", "2019-01-02")
+						res.body[0].should.have.property("n", 0)
+						res.body[0].should.have.property("value", 0.1)
+						res.body[0].should.have.property("pk", user)
+						let tmp = (res.body[0].nextUser === null)
+						tmp.should.be.true
+						done()
+					})
 			})
 		})
 	})

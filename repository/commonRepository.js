@@ -13,6 +13,11 @@ function deleteAllResults () {
 	return AggregationResult.deleteAll()
 }
 
+//Only for testing
+function deleteAllRawRequests () {
+	return RawAggregationRequest.deleteAll()
+}
+
 /*
 	Returns all results stored in the database
 */
@@ -28,8 +33,9 @@ function createRawRequest (request) {
 	Inserts a new raw request and triggers processing raw aggregation requests to aggregation requests
 */
 function insertNewRawRequest (request) {
-	return RawAggregationRequest.insert(request)
-	buildAggregationRequestsFromRaw()
+	return RawAggregationRequest.insert(request).then(res => {
+		return buildAggregationRequestsFromRaw()
+	})
 }
 
 /*
@@ -56,14 +62,16 @@ function buildAggregationRequestsFromRaw () {
 	Get all aggregation requests for the specified user that have not been served yet.
 */
 function getOpenAggregationRequests(publicKey) {
+	console.log(publicKey)
 	let query = {"publicKey":publicKey, "completed": false}
-	return AggregationRequest.get(query).then(requests => {
+	return AggregationRequest.get({}).then(requests => {
+		console.log(requests)
 		for (request of requests) {
 			request.serverId = request._id
 			delete request._id
 		}
 
-		return Promise.resolve(result)
+		return Promise.resolve(requests)
 	})
 }
 
@@ -156,11 +164,11 @@ function cleanUp () {
 
 module.exports = {
 	getRequests: getOpenAggregationRequests,
-	insertNewRawRequest: insertNewRawRequest,
 	insertNewAggregationRequest: insertNewAggregationRequest,
 	insertNewRawRequest: insertNewRawRequest,
 	deleteAllRequests: deleteAllRequests,
 	deleteAllResults: deleteAllResults,
 	cleanUp: cleanUp,
-	createRawRequest : createRawRequest
+	createRawRequest : createRawRequest,
+	deleteAllRawRequests: deleteAllRawRequests
 }

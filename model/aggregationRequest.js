@@ -1,6 +1,6 @@
 const mongo = require('mongodb')
 const crypto = require("crypto")
-const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
+const url = process.env.PORT ? "mongodb+srv://:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
 "mongodb://localhost:27017/"
 const mongoClient = mongo.MongoClient
 
@@ -93,7 +93,7 @@ function createAggregationRequestIfPossible(request) {
 	Also returns null, if the userList is empty.
 */
 function createAggregationRequestFromRawRequestIfPossible(raw, userList) {
-	if (!userList || !userList.length || userList.length <= 1) {
+	if (!userList || !userList.length || userList.length < 1) {
 		return null
 	}
 
@@ -101,11 +101,11 @@ function createAggregationRequestFromRawRequestIfPossible(raw, userList) {
 	let encryptedRequest = encryptRequest(dataToEncrypt, userList[0])
 
 	return createAggregationRequestIfPossible({
-		"rawRequestId": raw.rawRequestId,
+		"rawRequestId": raw._id,
 		"original_start": (new Date()).getTime(),
 		"previousRequest": null,
 		"publicKey" : userList.shift(),
-		"nextuser": userList.length == 0 ? null : userList.shift(),
+		"nextUser": userList.length == 0 ? null : userList.shift(),
 		"users" : userList,
 		"encryptionKey": encryptedRequest.encryptionKey,
 		"iv": encryptedRequest.iv,
@@ -152,7 +152,8 @@ function encryptRequest (request, publicKey) {
 
 	// Create an initialization vector for encryption of the request data
 	let iv = Buffer.alloc(16)
-	iv = Buffer.from(Array.prototype.map.call(iv, () => {return Math.floor(Math.random() * 256)})).toString('base64')
+	iv = Buffer.from(Array.prototype.map.call(iv, () => {return Math.floor(Math.random() * 256)}))
+	ivString = iv.toString('base64')
 
 	// Encrypt the synchronous key with the public key
 	let key = {"key": publicKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
@@ -166,7 +167,7 @@ function encryptRequest (request, publicKey) {
 	
 	return {
 		"encryptionKey": encryptionKey,
-		"iv": iv,
+		"iv": ivString,
 		"encryptedRequest": crypted
 	}
 }

@@ -15,7 +15,10 @@ function createUser(publicKey) {
 	let lastSeen = (new Date()).getTime()
 	let user = User.fromValues(publicKey, lastSeen, password)
 
-	return User.insert(user)
+	return User.insert(user).then(insertedUser => {
+		insertedUser.password = random
+		return Promise.resolve(insertedUser)
+	})
 }
 
 /*
@@ -32,8 +35,8 @@ function updateUserTimestamp (publicKey) {
 */
 function authenticateUser(publicKey, password) {
 	let query = {"publicKey": publicKey, "password": password}
-	return User.get(quer, {}).then (user => {
-		if (uers.length != 1) {
+	return User.get({}, {}).then (users => {
+		if (users.length != 1) {
 			return Promise.reject("Not authenticated")
 		} else {
 			return Promise.resolve()

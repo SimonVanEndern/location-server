@@ -18,7 +18,7 @@ function authenticateUser (req, res, next) {
 		user = req.body.publicKey
 		pw = req.body.password
 	}
-	
+
 	try {
 		pw = crypto.createHash("sha256").update(pw).digest().toString()
 	} catch (err) {
@@ -26,6 +26,7 @@ function authenticateUser (req, res, next) {
 	}
 
 	UserRepository.authenticateUser(user, pw).then(() => {
+		console.log("Authenticated")
 		next()
 	}).catch(err => {
 		console.log("Authentication failed")
@@ -38,6 +39,7 @@ function authenticateUser (req, res, next) {
 	Either way, the HTTP request is passed to the next middleware via call to "next()".
 */
 function updateUserLastSeen (req, res, next) {
+	console.log("TIME")
 	if (req.method === "POST") {
 		if (!req.body.pk) {
 			console.log("WARNING: No user specified on POST")

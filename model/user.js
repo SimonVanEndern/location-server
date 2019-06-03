@@ -1,5 +1,5 @@
 const mongo = require('mongodb')
-const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
+const url = process.env.PORT ? "mongodb+srv://:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
 "mongodb://localhost:27017/"
 const mongoClient = mongo.MongoClient
 

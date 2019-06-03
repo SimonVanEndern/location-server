@@ -1,5 +1,5 @@
 const mongo = require('mongodb')
-const url = process.env.PORT ? "mongodb+srv://admin:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
+const url = process.env.PORT ? "mongodb+srv://:Xww8iodZGKOmPELi@data-opnoy.mongodb.net/test?retryWrites=true" : 
 "mongodb://localhost:27017/"
 const mongoClient = mongo.MongoClient
 
@@ -92,7 +92,9 @@ function insertRawAggregationRequest(request) {
 	} else {
 		return openDb().then(db => {
 		 	 return db.collection(DB_AGGREGATION_REQUESTS_RAW).insertOne(requestToInsert)
-		})
+	 	}).then(res => {
+	 	 	return Promise.resolve(res.ops[0])
+	 	})
 	}
 }
 
@@ -101,7 +103,7 @@ function insertRawAggregationRequest(request) {
 */
 function getRawAggregationRequests (query) {
 	return openDb().then(db => {
-		return db.collection(DB_AGGREGATION_REQUESTS_RAW).find(query).sort(sort).toArray()
+		return db.collection(DB_AGGREGATION_REQUESTS_RAW).find(query).toArray()
 	})
 }
 
@@ -115,9 +117,18 @@ function updateOneRawAggregationRequest(query, update) {
 	})
 }
 
+// Only for testing. Removes all users.
+function deleteAllRawRequests() {
+	return openDb().then(db => {
+ 		let result = db.collection(DB_AGGREGATION_REQUESTS_RAW).deleteMany({})
+ 		return result
+ 	})
+}
+
 module.exports = {
 	fromValues : createRawAggregationRequestFromValuesIfPossible,
 	insert : insertRawAggregationRequest,
 	update: updateOneRawAggregationRequest,
-	"get": getRawAggregationRequests
+	"get": getRawAggregationRequests,
+	deleteAll: deleteAllRawRequests
 }
