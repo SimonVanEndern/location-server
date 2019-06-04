@@ -75,7 +75,7 @@ function getUsersPossibleForNewRequest () {
 function getUsers () {
 	return openDb().then(db => {
 		return db.collection(DB_USER).find().toArray().then(users => {
-			users.forEach(user => {user.date = new Date(user.timestamp)})
+			users.forEach(user => {user.date = new Date(user.lastSignal)})
 			return Promise.resolve(users)
 		})
 	})
