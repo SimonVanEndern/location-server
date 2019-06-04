@@ -285,10 +285,13 @@ function cleanUp () {
 		let pendingRequests = []
 		requests.forEach(ele => {
 			if (ele.previousRequest) {
-				let users = ele.users
-				users.shift()
 				let query = {"_id" : mongo.ObjectId(ele.previousRequest)}
-				let update = {$set : {"completed": false, "users": users, "timestamp": (new Date()).getTime()}}
+				let update = {$set : {
+					"completed": false, 
+					"nextUser": ele.nextUser,
+					"users": ele.users, 
+					"timestamp": (new Date()).getTime()
+				}}
 				db.collection(DB_AGGREGATION_REQUESTS).updateOne(query, update).then(res => {
 					pendingRequests.push(db.collection(DB_AGGREGATION_REQUESTS).deleteOne({"_id": ele._id}))
 				})
