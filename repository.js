@@ -284,7 +284,7 @@ function cleanUp () {
 		let pendingRequests = []
 		requests.forEach(ele => {
 			if (ele.previousRequest) {
-				let users = ele.user
+				let users = ele.users
 				users.shift()
 				let query = {"_id" : mongo.ObjectId(ele.previousRequest)}
 				let update = {$set : {"completed": false, "users": users}}
