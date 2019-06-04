@@ -14,7 +14,26 @@ chai.use(chaiHttp);
 //Our parent block
 
 
-describe.only('Repository', () => {
+describe('Repository', () => {
+	let user = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp/he1JTafLx5ngpLKe2YL/dCvphetQNg6e2zw6ive+crGwwSkF3oyY7adyGxTWBQOcgBwYg67KJQaIhdgA3noRaSidJBbXPqNBxulr1GFaBq3SZh0l+YbajznU0EaeI/ENElTAs605/jkzMXdtq7cF3kbkdLOi2jLCN42H3C5EDR8UPDMifyrRl66p3IsapTuLVPoBU+lWSsRnxa4ZQuAAJy1OrzdqNFrfF355TD03gi+d/Fz4A29lDtaZ1eXxz9H8RkfCQclXR79D7ih4p7+KNKjm8IisQ6auceBNYaZm9q+TXPN9Wo1tYyGIZOeFp1xddcVk47zJPBprDmHWAGKwIDAQAB\n-----END PUBLIC KEY-----"
+	let privateKey = "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCn+F7UlNp8vHmeCksp7Zgv90K+mF61A2Dp7bPDqK975ysbDBKQXejJjtp3IbFNYFA5yAHBiDrsolBoiF2ADeehFpKJ0kFtc+o0HG6WvUYVoGrdJmHSX5htqPOdTQRp4j8Q0SVMCzrTn+OTMxd22rtwXeRuR0s6LaMsI3jYfcLkQNHxQ8MyJ/KtGXrqncixqlO4tU+gFT6VZKxGfFrhlC4AAnLU6vN2o0Wt8XfnlMPTeCL538XPgDb2UO1pnV5fHP0fxGR8JByVdHv0PuKHinv4o0qObwiKxDpq5x4E1hpmb2r5Nc831ajW1jIYhk54WnXF11xWTjvMk8GmsOYdYAYrAgMBAAECggEADMgWl0CYe6Nv8bnAzHj6+rNrDcvUcRvHtSVUZ5AfgmMt4YoCo5+xxhyrvSMANe4dTLhOgeaW7UjQq5Os4cCtHpH0Jq6sMeL/MGX1eF0Ax0aEuz1fdj22AKo5l3+z1UbVG7d+ihHUsSPakmnx4CZ22u8aIdYlAFFWuFYerQKs4Od6Cl037iesEuD5i9YdFJ1xbrX9M1yJuosEDMvpoz2XYTqABQT4VTibcZSI9IDEc0FSQNuYboqWSp3YgPbVhxGq3zzDtSY62AYBw9Qep/R49ykEBUGwKBWZIurZ2IUw5ycGSPdnDEM+WF91NsnGqBONf8BlylgdTvZTCmcKKTTF2QKBgQDpc/GWqn+JoM4337FPLbIHf7do3FjiZKrI5gF/lAxtJwhQqKNJOIc0Citr/SrlIcnFCOkSAPb1RBaHrq7MK1287dLhlER6xsQUvzfYSTSSmBnqXkGw9udP5S+A0QPwowLlwe456CtuhS6N40/BmjMFIDSCmd6B/Z52GbQfmpT7lwKBgQC4MWKwLlunsqnL2yZU7b3GcJB2iBmGlm5LfaOk+/Mcb4tX11LWblCZqe9KimIErf8w6aF5VLiLF7UUBF9tmzmvIbB5hCLGzkk71rvc6YauuMeiSq4d1tB7aQXBeeOlaHb4TlgpyOZO3z4e/CF7EAoZXVAFlo6lefgEAYKfyvisjQKBgQCYcFculMKW8eP2ZCD5nNMFRoZS+J8ppaZHbLlJvzimBbjOQm/tHfZbKtDTwQrDd96yxHC8iti3qvAzRQNq2l5pQbpUBmb47NWY3ovutU6Y8qzpdwbaMT810mfEa7dw6GC5+no+YbYKgvi1OdsYhkIOdMsVBLhglWVlpL8Ta/MgnQKBgCGcaWzK2NDOKmvXrrP6uhGXAtWOWlIT60Z9Q7pce21p8VxzH1ufv7d6qf7JJ7/A3HtZdqzER/Shu9pOPferRqhtll1mPk5W4Eg6FAfo2TnS4CL+S62IQHz0midHDcJmQKdo7G+biGNGG3jd+2IQeDdOrsaGRbtueVKJ0ANGr4AVAoGBAMrrcxO/JAgEOZm916eS07Vb1jdc8JY2NmCrO+9I9uTls+H/O/Ys0jgTCJaVLYCiRY96XhvhgfFsAV/oo+Z4/x3buUd3PBkdhoFV40HtSgRX3v3wb/HfycHzNnN2p5sptV5n8S2wHdwopuQxXwuACM2XtE4qkq4w04ermYdlKma4\n-----END PRIVATE KEY-----"
+	let password
+	beforeEach((done) => {
+		//privateKey = privateKey.replace(/_/g, '/').replace(/-/g, '+')
+		UserRepository.deleteAllUsers().then(() => {
+			UserRepository.createUser(user).then(user => {
+				password = user.password
+				Repository.deleteAllRequests().then(() => {
+					Repository.deleteAllResults().then(() => {
+						Repository.deleteAllRawRequests().then(() => {
+							done()
+						})
+					})
+				})
+			})
+		})
+	})
+
 	describe('Insert new raw aggregation', () => {
 		it('should insert a new raw aggregation and check for required fields', (done) => {
 			let request = {
@@ -25,7 +44,7 @@ describe.only('Repository', () => {
 
 			Repository.insertNewRawRequest(request).then (result => {
 				result.should.have.property("_id")
-				result.should.include.keys(Object.getOwnPropertyNames(request))
+				result.should.have.property("rawRequestId")
 				done()
 			})
 		})
@@ -50,7 +69,6 @@ describe('Requests', () => {
 	let privateKey = "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCn+F7UlNp8vHmeCksp7Zgv90K+mF61A2Dp7bPDqK975ysbDBKQXejJjtp3IbFNYFA5yAHBiDrsolBoiF2ADeehFpKJ0kFtc+o0HG6WvUYVoGrdJmHSX5htqPOdTQRp4j8Q0SVMCzrTn+OTMxd22rtwXeRuR0s6LaMsI3jYfcLkQNHxQ8MyJ/KtGXrqncixqlO4tU+gFT6VZKxGfFrhlC4AAnLU6vN2o0Wt8XfnlMPTeCL538XPgDb2UO1pnV5fHP0fxGR8JByVdHv0PuKHinv4o0qObwiKxDpq5x4E1hpmb2r5Nc831ajW1jIYhk54WnXF11xWTjvMk8GmsOYdYAYrAgMBAAECggEADMgWl0CYe6Nv8bnAzHj6+rNrDcvUcRvHtSVUZ5AfgmMt4YoCo5+xxhyrvSMANe4dTLhOgeaW7UjQq5Os4cCtHpH0Jq6sMeL/MGX1eF0Ax0aEuz1fdj22AKo5l3+z1UbVG7d+ihHUsSPakmnx4CZ22u8aIdYlAFFWuFYerQKs4Od6Cl037iesEuD5i9YdFJ1xbrX9M1yJuosEDMvpoz2XYTqABQT4VTibcZSI9IDEc0FSQNuYboqWSp3YgPbVhxGq3zzDtSY62AYBw9Qep/R49ykEBUGwKBWZIurZ2IUw5ycGSPdnDEM+WF91NsnGqBONf8BlylgdTvZTCmcKKTTF2QKBgQDpc/GWqn+JoM4337FPLbIHf7do3FjiZKrI5gF/lAxtJwhQqKNJOIc0Citr/SrlIcnFCOkSAPb1RBaHrq7MK1287dLhlER6xsQUvzfYSTSSmBnqXkGw9udP5S+A0QPwowLlwe456CtuhS6N40/BmjMFIDSCmd6B/Z52GbQfmpT7lwKBgQC4MWKwLlunsqnL2yZU7b3GcJB2iBmGlm5LfaOk+/Mcb4tX11LWblCZqe9KimIErf8w6aF5VLiLF7UUBF9tmzmvIbB5hCLGzkk71rvc6YauuMeiSq4d1tB7aQXBeeOlaHb4TlgpyOZO3z4e/CF7EAoZXVAFlo6lefgEAYKfyvisjQKBgQCYcFculMKW8eP2ZCD5nNMFRoZS+J8ppaZHbLlJvzimBbjOQm/tHfZbKtDTwQrDd96yxHC8iti3qvAzRQNq2l5pQbpUBmb47NWY3ovutU6Y8qzpdwbaMT810mfEa7dw6GC5+no+YbYKgvi1OdsYhkIOdMsVBLhglWVlpL8Ta/MgnQKBgCGcaWzK2NDOKmvXrrP6uhGXAtWOWlIT60Z9Q7pce21p8VxzH1ufv7d6qf7JJ7/A3HtZdqzER/Shu9pOPferRqhtll1mPk5W4Eg6FAfo2TnS4CL+S62IQHz0midHDcJmQKdo7G+biGNGG3jd+2IQeDdOrsaGRbtueVKJ0ANGr4AVAoGBAMrrcxO/JAgEOZm916eS07Vb1jdc8JY2NmCrO+9I9uTls+H/O/Ys0jgTCJaVLYCiRY96XhvhgfFsAV/oo+Z4/x3buUd3PBkdhoFV40HtSgRX3v3wb/HfycHzNnN2p5sptV5n8S2wHdwopuQxXwuACM2XtE4qkq4w04ermYdlKma4\n-----END PRIVATE KEY-----"
 	let password
 	beforeEach((done) => {
-		//privateKey = privateKey.replace(/_/g, '/').replace(/-/g, '+')
 		UserRepository.deleteAllUsers().then(() => {
 			UserRepository.createUser(user).then(user => {
 				password = user.password
@@ -122,17 +140,21 @@ describe('Requests', () => {
 				"type": "steps"
 			}
 
-			UserRepository.createUser(user2).then(() => {
+			UserRepository.createUser(user2).then(createdUser2 => {
 				Repository.insertNewRawRequest(request).then(doc => {
-					request.serverId = doc._id
+					doc.serverId = doc._id
+					delete doc._id
+					doc.password = createdUser2.password
+					/*request.serverId = doc._id
+					request.rawRequestId = doc
 					request.nextUser = doc.nextUser
 					request.publicKey = doc.publicKey
-					request.password = password
+					request.password = createdUser2.password*/
 
 					chai.request(server)
 						.post('/forward')
 						.set('content-type', 'application/json')
-						.send(request)
+						.send(doc)
 						.end((err, res) => {
 							res.should.have.status(200)
 							res.body.should.have.status(true)
@@ -176,7 +198,6 @@ describe('Requests', () => {
 					.set('content-type', 'application/json')
 					.send(request)
 					.end((err, res) => {
-						//console.log(err)
 						res.should.have.status(200)
 						res.body.should.have.status(true)
 						Repository.getResults().then(res => {
@@ -200,35 +221,32 @@ describe('Requests', () => {
 			let request = {
 				"start"  : "2019-01-01",
 				"end": "2019-01-02",
-				"type": "steps",
-				"n": 0,
-				"value": 0.1
+				"type": "steps"
 			}
 
-			Repository.insertSampleAggregationRequest(request, (success, doc) => {
-				if (success) {
-					doc.pk.should.be.string(user)
-					doc.users.should.be.a("array")
-					doc.users.should.be.empty
-					let tmp = (doc.nextUser === null)
-					tmp.should.be.true
-					//doc.iv.should.be.a("String")
+			Repository.insertNewRawRequest(request).then(doc => {
+				doc.publicKey.should.be.string(user)
+				doc.users.should.be.a("array")
+				doc.users.should.be.empty
+				let tmp = (doc.nextUser === null)
+				tmp.should.be.true
+				//doc.iv.should.be.a("String")
 
-					let key = {"key" : privateKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
-					let synchronousKey = crypto.privateDecrypt(key, Buffer.from(doc.encryptionKey, 'base64')).toString('base64')
-					let iv = Buffer.from(doc.iv, 'base64')
-					let decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(synchronousKey, 'base64'), iv)
-					let crypted = decipher.update(Buffer.from(doc.encryptedRequest, 'base64'), 'base64', 'utf8')
-					crypted += decipher.final('utf8')
+				let key = {"key" : privateKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
+				let synchronousKey = crypto.privateDecrypt(key, Buffer.from(doc.encryptionKey, 'base64')).toString('base64')
+				let iv = Buffer.from(doc.iv, 'base64')
+				let decipher = crypto.createDecipheriv("aes-256-cbc", Buffer.from(synchronousKey, 'base64'), iv)
+				let crypted = decipher.update(Buffer.from(doc.encryptedRequest, 'base64'), 'base64', 'utf8')
+				crypted += decipher.final('utf8')
 
-					let decryptedRequest = JSON.parse(crypted)
-					request._id = request._id.toString()
-					decryptedRequest.should.deep.equal(request)
+				let decryptedRequest = JSON.parse(crypted)
+				doc._id = doc._id.toString()
+				request.n = 0
+				request.value = 0
+				request.valueList = []
+				decryptedRequest.should.deep.equal(request)
 
-					done()
-				} else {
-					throw "Failed to set up test"
-				}
+				done()
 			})
 		})
 	})

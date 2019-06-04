@@ -61,7 +61,6 @@ function handleForwardRequest (req, res) {
 	// TODO: Re-voke user authentication!!!
 	if (!original_request_id) {
 		console.log("Sending 400 to foward request")
-		console.log(req.body)
 		res.status(400).send("Not Ok")
 		return
 	} else if (!target) {

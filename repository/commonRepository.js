@@ -33,9 +33,7 @@ function createRawRequest (request) {
 	Inserts a new raw request and triggers processing raw aggregation requests to aggregation requests
 */
 function insertNewRawRequest (request) {
-	console.log("Inserting")
 	return RawAggregationRequest.insert(request).then(res => {
-		console.log("BUILDING")
 		return buildAggregationRequestsFromRaw()
 	})
 }
@@ -51,7 +49,10 @@ function buildAggregationRequestsFromRaw () {
 	return Promise.all([rawAggregationRequests, possibleUsers]).then(res => {
 		let requests = res[0]
 		let users = res[1]
-		let pendingInsertions = requests.map(request => AggregationRequest.insert(request, users))
+		let pendingInsertions = requests.map(request => {
+			let requestToInsert = AggregationRequest.fromRawRequest(request, users)
+			return AggregationRequest.insert(requestToInsert)
+		})
 		return Promise.all(pendingInsertions)
 	}).then(insertedRequests => {
 		let queries = insertedRequests.map(insertion => {return {"_id": insertion.rawRequestId}})
@@ -105,14 +106,15 @@ function insertNewAggregationRequest(request) {
 		if (original.length != 1) {
 			return Promise.reject("No corresponding request found")
 		} else {
+			request.users = original[0].users
 			let newRequest = AggregationRequest.fromAggregationRequest(request)
 			return AggregationRequest.insert(newRequest)
 		}
 	}).then(inserted => {
-		let query = {"_id": original_request_id}
+		let query = {"_id": request.serverId}
 		let update = {$set: { "completed": true}}
 		return AggregationRequest.update(query, update).then(res => {
-			return Promise.resolve(inserted.ops[0])
+			return Promise.resolve(inserted)
 		})
 	})
 }

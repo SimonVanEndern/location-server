@@ -114,12 +114,15 @@ function createAggregationRequestFromRawRequestIfPossible(raw, userList) {
 }
 
 function createAggregationRequestFromAggregationRequestIfPossible (request) {
+	if (!request || !request.users) {
+		return null
+	}
 	return createAggregationRequestIfPossible({
 		"rawRequestId": request.rawRequestId,
 		"started_at": request.started_at,
 		"previousRequest": request.previousRequest,
 		"publicKey" : request.nextUser,
-		"nextuser": request.users.length == 0 ? null : request.users.shift(),
+		"nextUser": request.users.length == 0 ? null : request.users.shift(),
 		"users" : request.users,
 		"encryptionKey": request.encryptionKey,
 		"iv": request.iv,
@@ -157,7 +160,6 @@ function encryptRequest (request, publicKey) {
 
 	// Encrypt the synchronous key with the public key
 	let key = {"key": publicKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
-	console.log(key)
 	let encryptionKey = crypto.publicEncrypt(key, Buffer.from(synchronousKey, 'base64')).toString('base64')
 		
 	// Encrypt the request with the synchronous key
@@ -176,8 +178,8 @@ function encryptRequest (request, publicKey) {
 /*
 	Inserts a new aggregation request if the passed object satisfies the model requirements.
 */
-function insertAggregationRequest(request, userList) {
-	let requestToInsert = createAggregationRequestFromRawRequestIfPossible(request, userList)
+function insertAggregationRequest(request) {
+	let requestToInsert = createAggregationRequestIfPossible(request)
 	if (!requestToInsert) {
 		return Promise.reject("Could not create aggregation request, missing or wrong fields")
 	} else {

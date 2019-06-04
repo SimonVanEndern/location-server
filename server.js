@@ -10,6 +10,9 @@ Helper.runCleanUpJob()
 //Parse json body into req.body
 app.use(express.json({"type": "application/json"}))
 
+//Update each users lastSeen timestamp on each contact.
+app.use(Helper.updateUser)
+
 //Set routes that require user authentication.
 Routes.requireUserAuthentication(app, 
 	[
@@ -18,8 +21,6 @@ Routes.requireUserAuthentication(app,
 	]
 )
 
-//Update each users lastSeen timestamp on each contact.
-app.use(Helper.updateUser)
 
 //Register the routes of the server
 Routes.setRoutes(app)
