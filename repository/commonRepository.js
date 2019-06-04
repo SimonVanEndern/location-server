@@ -33,7 +33,9 @@ function createRawRequest (request) {
 	Inserts a new raw request and triggers processing raw aggregation requests to aggregation requests
 */
 function insertNewRawRequest (request) {
+	console.log("Inserting")
 	return RawAggregationRequest.insert(request).then(res => {
+		console.log("BUILDING")
 		return buildAggregationRequestsFromRaw()
 	})
 }
@@ -54,7 +56,9 @@ function buildAggregationRequestsFromRaw () {
 	}).then(insertedRequests => {
 		let queries = insertedRequests.map(insertion => {return {"_id": insertion.rawRequestId}})
 		let update = {$set : {"started":true}}
-		return Promise.all(queries.map(query => RawAggregationRequest.update(query, update)))
+		return Promise.all(queries.map(query => RawAggregationRequest.update(query, update))).then(updated => {
+			return insertedRequests.length == 1 ? insertedRequests[0] : insertedRequests
+		})
 	})
 }
 
@@ -92,24 +96,24 @@ function getLastSeenUsers (limit) {
 /*
 	Inserts a new aggregation request from a served previous aggregation request.
 */
-function insertNewAggregationRequest(pk, data, original_request_id) {
+function insertNewAggregationRequest(request) {
 	let query = {
-			"_id": mongo.ObjectId(original_request_id),
+			"_id": request.serverId,
 			"completed": false
 		}
 	return AggregationRequest.get(query).then(original => {
 		if (original.length != 1) {
 			return Promise.reject("No corresponding request found")
 		} else {
-			data.publicKey = data.publicKey
-			data.id = original_request_id
-			let newRequest = AggregationRequest.fromAggregationRequest(data)
+			let newRequest = AggregationRequest.fromAggregationRequest(request)
 			return AggregationRequest.insert(newRequest)
 		}
-	}).then(deletions => {
-		let query = {"_id": mongo.ObjectId(original_request_id)}
+	}).then(inserted => {
+		let query = {"_id": original_request_id}
 		let update = {$set: { "completed": true}}
-		return AggregationRequest.update(query, update)
+		return AggregationRequest.update(query, update).then(res => {
+			return Promise.resolve(inserted.ops[0])
+		})
 	})
 }
 
@@ -117,16 +121,16 @@ function insertNewAggregationRequest(pk, data, original_request_id) {
 	Inserts a new aggregation result from a served aggregation request.
 	Also deletes all aggregation requests linked to the corresponding raw request.
 */
-function insertNewAggregationResultAndDeleteRequests (pk, data, original_request_id) {
+function insertNewAggregationResultAndDeleteRequests (request) {
 	let query = {
-		"_id": mongo.ObjectId(original_request_id),
+		"_id": request.serverId,
 		"completed": false
 	}
 	return AggregationRequest.get(query).then(original => {
-		if (!original) {
+		if (original.length != 1) {
 			return Promise.reject("No corresponding request found")
 		} else {
-			return AggregationResult.insert(data)
+			return AggregationResult.insert(request)
 		}
 	}).then(insertedResult => {
 		rawRequestId = insertedResult.rawRequestId
@@ -140,14 +144,14 @@ function cleanUp () {
 		let pendingRequests = []
 		requests.forEach(ele => {
 			if (ele.previousRequest) {
-				let query = {"_id" : mongo.ObjectId(ele.previousRequest)}
+				let query = {"_id" :  ele.previousRequest}
 				// Update user list and exclude not responding user!
 				let update = {$set : {"completed": false}}
 				AggregationRequest.update(query, update).then(res => {
 					AggregationRequest.deleteById(ele._id)
 				})
 			} else {
-				let query = {"_id": mongo.ObjectId(ele.rawRequestId)}
+				let query = {"_id":  ele.rawRequestId}
 				let update = {$set : {"started": false}}
 				RawAggregationRequest.update(query, update).then(res => {
 					AggregationRequest.deleteById(ele._id)
@@ -162,7 +166,9 @@ function cleanUp () {
 
 module.exports = {
 	getRequests: getOpenAggregationRequests,
+	getResults: getResults,
 	insertNewAggregationRequest: insertNewAggregationRequest,
+	insertNewAggregationResultAndDeleteRequests: insertNewAggregationResultAndDeleteRequests,
 	insertNewRawRequest: insertNewRawRequest,
 	deleteAllRequests: deleteAllRequests,
 	deleteAllResults: deleteAllResults,

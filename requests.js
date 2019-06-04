@@ -53,7 +53,7 @@ function sendAggregations (req, res) {
 */
 function handleForwardRequest (req, res) {
 	console.log("Got forward request")
-	let pk = req.body.pk
+	let publicKey = req.body.publicKey
 	let target = req.body.nextUser
 	let original_request_id = req.body.serverId
 	let data = req.body.data
@@ -61,16 +61,20 @@ function handleForwardRequest (req, res) {
 	// TODO: Re-voke user authentication!!!
 	if (!original_request_id) {
 		console.log("Sending 400 to foward request")
+		console.log(req.body)
 		res.status(400).send("Not Ok")
 		return
 	} else if (!target) {
-		Repository.insertNewAggregationAndDeleteRequest(target, req.body, original_request_id).then(() => {
+		Repository.insertNewAggregationResultAndDeleteRequests(req.body).then(() => {
 			res.status(200).json({"status":true});
+		}).catch(err => {
+			console.log(err)
 		})
 	} else {
-		Repository.insertNewRequestAndDeleteOld(target, req.body, original_request_id).then(() =>  {
-			//console.log("Got forward request: target=" + target + " pk=" + pk + " original_request_id=" + original_request_id)
+		Repository.insertNewAggregationRequest(req.body).then(() =>  {
 			res.status(200).json({"status":true});
+		}).catch(err => {
+			console.log(err)
 		})
 	}
 }
@@ -104,8 +108,8 @@ function handleInsertSample (req, res) {
 	})
 }
 
-function updateUserTimestamp (pk) {
-	UserRepository.updateUserTimestamp(pk)
+function updateUserTimestamp (publicKey) {
+	UserRepository.updateUserTimestamp(publicKey)
 }
 
 module.exports = {

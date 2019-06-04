@@ -23,7 +23,8 @@ describe('Users', () => {
   */
   	describe('/POST new user', () => {
       	it('should create a new user and respond with the linked password', (done) => {
-      		let user = {"publicKey": "testUserUnitTest"}
+          let publicKey = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp/he1JTafLx5ngpLKe2YL/dCvphetQNg6e2zw6ive+crGwwSkF3oyY7adyGxTWBQOcgBwYg67KJQaIhdgA3noRaSidJBbXPqNBxulr1GFaBq3SZh0l+YbajznU0EaeI/ENElTAs605/jkzMXdtq7cF3kbkdLOi2jLCN42H3C5EDR8UPDMifyrRl66p3IsapTuLVPoBU+lWSsRnxa4ZQuAAJy1OrzdqNFrfF355TD03gi+d/Fz4A29lDtaZ1eXxz9H8RkfCQclXR79D7ih4p7+KNKjm8IisQ6auceBNYaZm9q+TXPN9Wo1tYyGIZOeFp1xddcVk47zJPBprDmHWAGKwIDAQAB\n-----END PUBLIC KEY-----"
+      		let user = {"publicKey": publicKey}
         	chai.request(server)
             	.post('/user')
             	.send(user)
@@ -38,7 +39,8 @@ describe('Users', () => {
 
 	describe('/Post existing user', () => {
 		it('should fail with status 400 because the user already exists', (done) => {
-			let user = {"publicKey":"testUserUnitTest"}
+			let publicKey = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp/he1JTafLx5ngpLKe2YL/dCvphetQNg6e2zw6ive+crGwwSkF3oyY7adyGxTWBQOcgBwYg67KJQaIhdgA3noRaSidJBbXPqNBxulr1GFaBq3SZh0l+YbajznU0EaeI/ENElTAs605/jkzMXdtq7cF3kbkdLOi2jLCN42H3C5EDR8UPDMifyrRl66p3IsapTuLVPoBU+lWSsRnxa4ZQuAAJy1OrzdqNFrfF355TD03gi+d/Fz4A29lDtaZ1eXxz9H8RkfCQclXR79D7ih4p7+KNKjm8IisQ6auceBNYaZm9q+TXPN9Wo1tYyGIZOeFp1xddcVk47zJPBprDmHWAGKwIDAQAB\n-----END PUBLIC KEY-----"
+      let user = {"publicKey": publicKey}
 			UserRepository.createUser(user.publicKey).then(() => {
 				chai.request(server)
 					.post('/user')

@@ -35,7 +35,7 @@ function updateUserTimestamp (publicKey) {
 */
 function authenticateUser(publicKey, password) {
 	let query = {"publicKey": publicKey, "password": password}
-	return User.get({}, {}).then (users => {
+	return User.get(query).then (users => {
 		if (users.length != 1) {
 			return Promise.reject("Not authenticated")
 		} else {

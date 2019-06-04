@@ -14,15 +14,13 @@ chai.use(chaiHttp);
 //Our parent block
 
 
-describe('Repository', () => {
+describe.only('Repository', () => {
 	describe('Insert new raw aggregation', () => {
 		it('should insert a new raw aggregation and check for required fields', (done) => {
 			let request = {
 				"start"  : "2019-01-01",
 				"end": "2019-01-02",
-				"type": "steps",
-				"n": 0,
-				"value": 0.1
+				"type": "steps"
 			}
 
 			Repository.insertNewRawRequest(request).then (result => {
@@ -115,7 +113,7 @@ describe('Requests', () => {
 		})
 	})
 
-	describe.only('/POST forward', () => {
+	describe('/POST forward', () => {
 		let user2 = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApYSaLkMKQz5Bg6owyFZE71Ty5OCryI5HtdbB0mXEBJjaoguuTJkgGSCVDApvfj3fj3MHTgjNW7M10XHlL+Lh05y0ht9+RB8brExZsV4qduKzgppf2o9OA0JQNpG1NDl0Sv7vFIQBN5WJbsvYIx1ZYjfTZfsoRHyyKmbTqtGpJlA+rYEctscFuc4aV3xSod5btOXV+R1NbqtDspWT4AuFxkWF4CWnzvScAtRsiCKj25hYGVfZJnpJsRQtCT278dU7VzK8sUMTpZS+F8C9ZTvB1R/DObQ6yFYCWJAFwMP/g6Ifd//OePv5/B+NN4Uwqlewr4gLYeKvoiySVnCNplljdwIDAQAB\n-----END PUBLIC KEY-----"
 		it('should POST a request to be forwarded', (done) => {
 			let request = {
@@ -130,9 +128,6 @@ describe('Requests', () => {
 					request.nextUser = doc.nextUser
 					request.publicKey = doc.publicKey
 					request.password = password
-					request.n = 3
-					request.value = 3.3
-					request.valueList = []
 
 					chai.request(server)
 						.post('/forward')
@@ -163,42 +158,39 @@ describe('Requests', () => {
 				"start"  : "2019-01-01",
 				"end": "2019-01-02",
 				"type": "steps",
-				"n": 0,
-				"value": 0.1
 			}
 
-			Repository.insertSampleAggregationRequest(request, (success, doc) => {
-				if (success) {
-					request.serverId = doc._id
-					request.nextUser = doc.nextUser
-					request.publicKey = doc.pk
-					request.password = password
-					request.n = 3
-					request.value = 3.3
+			Repository.insertNewRawRequest(request).then(doc => {
+				request.serverId = doc._id
+				request.rawRequestId = doc.rawRequestId
+				request.started_at = doc.started_at
+				request.nextUser = doc.nextUser
+				request.publicKey = doc.publicKey
+				request.password = password
+				request.n = 1
+				request.value = 3.3
+				request.valueList = []
 
-					chai.request(server)
-						.post('/forward')
-						.set('content-type', 'application/json')
-						.send(request)
-						.end((err, res) => {
-							res.should.have.status(200)
-							res.body.should.have.status(true)
-							Repository.getResults().then(res => {
+				chai.request(server)
+					.post('/forward')
+					.set('content-type', 'application/json')
+					.send(request)
+					.end((err, res) => {
+						//console.log(err)
+						res.should.have.status(200)
+						res.body.should.have.status(true)
+						Repository.getResults().then(res => {
+							res.should.be.a("array")
+							res.should.have.length(1)
+							Repository.getRequests(user).then(res => {
 								res.should.be.a("array")
-								res.should.have.length(1)
-								Repository.getRequests(user).then(res => {
-									res.should.be.a("array")
-									res.should.have.length(0)
-									done()	
-								})
-							}).catch(err => {
-								console.log(err)
+								res.should.have.length(0)
+								done()	
 							})
+						}).catch(err => {
+							console.log(err)
 						})
-				} else {
-					console.log("Failed to set up test")
-					throw "Failed to set up test"
-				}
+					})
 			})
 		})
 	})

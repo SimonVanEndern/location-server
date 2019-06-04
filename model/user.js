@@ -85,6 +85,11 @@ function insertUser(user) {
 	Retrieve all users that match the mongoDB query object and sort them accordingly by the mongoDB sort object.
 */
 function getUsers (query, sort) {
+	query = query ? query : {}
+	if (query._id) {
+		query._id =  mongo.ObjectId(query._id)
+	}
+	sort = sort ? sort : {}
 	return openDb().then(db => {
 		return db.collection(DB_USER).find(query).sort(sort).toArray()
 	})
@@ -94,6 +99,10 @@ function getUsers (query, sort) {
 	Update one user that matches the mongoDB query object. The mongoDB update object specifies which values to update.
 */
 function updateOneUser(query, update) {
+	if (!query) {
+		return Promise.reject("no update without query")
+	}
+	query._id = query._id ? mongo.ObjectId(query._id) : query._id
 	return openDb().then(db => {
 		return db.collection(DB_USER).updateOne(query, update)
 	})

@@ -102,6 +102,10 @@ function insertRawAggregationRequest(request) {
 	Retrieve all raw aggregation requests that match the mongoDB query object.
 */
 function getRawAggregationRequests (query) {
+	query = query ? query : {}
+	if (query._id) {
+		query._id =  mongo.ObjectId(query._id)
+	}
 	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_REQUESTS_RAW).find(query).toArray()
 	})
@@ -112,6 +116,10 @@ function getRawAggregationRequests (query) {
 	The mongoDB update object specifies which values to update.
 */
 function updateOneRawAggregationRequest(query, update) {
+	if (!query) {
+		return Promise.reject("no update without query")
+	}
+	query._id = query._id ? mongo.ObjectId(query._id) : query._id
 	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_REQUESTS_RAW).updateOne(query, update)
 	})

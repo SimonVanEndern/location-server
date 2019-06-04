@@ -43,9 +43,9 @@ async function openDb () {
 /*
 	Our aggregation request model: Only those fields are inserted into the database
 */
-function AggregationRequest(rawRequestId, original_start, previousRequest, publicKey, nextUser, users, encryptionKey, iv, encryptedRequest) {
+function AggregationRequest(rawRequestId, started_at, previousRequest, publicKey, nextUser, users, encryptionKey, iv, encryptedRequest) {
 	this.rawRequestId = rawRequestId,
-	this.original_start = original_start
+	this.started_at = started_at
 	this.previousRequest = previousRequest
 	this.publicKey = publicKey
 	this.nextUser = nextUser
@@ -63,7 +63,7 @@ function AggregationRequest(rawRequestId, original_start, previousRequest, publi
 function createAggregationRequestIfPossible(request) {
 	if (
 		!request.rawRequestId || 
-		!request.original_start || 
+		!request.started_at || 
 		(!request.previousRequest && request.previousRequest !== null) || 
 		!request.publicKey || 
 		(!request.nextUser && request.nextUser !== null) || 
@@ -76,7 +76,7 @@ function createAggregationRequestIfPossible(request) {
 	} else {
 		return new AggregationRequest(
 			request.rawRequestId, 
-			request.original_start, 
+			request.started_at, 
 			request.previousRequest, 
 			request.publicKey, 
 			request.nextUser, 
@@ -102,7 +102,7 @@ function createAggregationRequestFromRawRequestIfPossible(raw, userList) {
 
 	return createAggregationRequestIfPossible({
 		"rawRequestId": raw._id,
-		"original_start": (new Date()).getTime(),
+		"started_at": (new Date()).getTime(),
 		"previousRequest": null,
 		"publicKey" : userList.shift(),
 		"nextUser": userList.length == 0 ? null : userList.shift(),
@@ -116,8 +116,8 @@ function createAggregationRequestFromRawRequestIfPossible(raw, userList) {
 function createAggregationRequestFromAggregationRequestIfPossible (request) {
 	return createAggregationRequestIfPossible({
 		"rawRequestId": request.rawRequestId,
-		"original_start": request.original_start,
-		"previousRequest": request.id,
+		"started_at": request.started_at,
+		"previousRequest": request.previousRequest,
 		"publicKey" : request.nextUser,
 		"nextuser": request.users.length == 0 ? null : request.users.shift(),
 		"users" : request.users,
@@ -157,6 +157,7 @@ function encryptRequest (request, publicKey) {
 
 	// Encrypt the synchronous key with the public key
 	let key = {"key": publicKey, "padding": crypto.constants.RSA_PKCS1_PADDING}
+	console.log(key)
 	let encryptionKey = crypto.publicEncrypt(key, Buffer.from(synchronousKey, 'base64')).toString('base64')
 		
 	// Encrypt the request with the synchronous key
@@ -192,6 +193,10 @@ function insertAggregationRequest(request, userList) {
 	Retrieve all aggregation requests that match the mongoDB query object.
 */
 function getAggregationRequests (query) {
+	query = query ? query : {}
+	if (query._id) {
+		query._id =  mongo.ObjectId(query._id)
+	}
 	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
 	})
@@ -202,6 +207,10 @@ function getAggregationRequests (query) {
 	The mongoDB update object specifies which values to update.
 */
 function updateOneAggregationRequest(query, update) {
+	if (!query) {
+		return Promise.reject("no update without query")
+	}
+	query._id = query._id ? mongo.ObjectId(query._id) : query._id
 	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_REQUESTS).updateOne(query, update)
 	})
@@ -209,13 +218,13 @@ function updateOneAggregationRequest(query, update) {
 
 function deleteByRawId(rawRequestId) {
 	return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({
-		"rawRequestId": rawRequestId
+		"rawRequestId": mongo.ObjectId(rawRequestId)
 	})	
 }
 
-function deleteById(requestid) {
+function deleteById(requestId) {
 	return db.collection(DB_AGGREGATION_REQUESTS).deleteMany({
-		"_id": requestid
+		"_id": mongo.ObjectId(requestId)
 	})	
 }
 

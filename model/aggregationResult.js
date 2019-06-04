@@ -58,7 +58,7 @@ function createAggregationResultIfPossible(request) {
 	) {
 		return null
 	} else {
-		return new AggregationRequest(
+		return new AggregationResult(
 			request.start, 
 			request.end, 
 			request.n, 
@@ -90,8 +90,11 @@ function insertAggregationResult(request) {
 /*
 	Retrieve all aggregation results that match the mongoDB query object.
 */
-function getAggregationResults (query) {
-	query = !query ? {} : query
+function getAggregationResults (query) {	
+	query = query ? query : {}
+	if (query._id) {
+		query._id =  mongo.ObjectId(query._id)
+	}
 	return openDb().then(db => {
 		return db.collection(DB_AGGREGATION_RESULTS).find(query).toArray()
 	})

@@ -42,7 +42,7 @@ function updateUserLastSeen (req, res, next) {
 		if (!req.body.publicKey) {
 			console.log("WARNING: No user specified on POST")
 		} else {
-			RequestHandling.updateUserTimestamp(req.body.publicKey)
+			UserRepository.updateUserTimestamp(req.body.publicKey)
 		}
 	} else if (req.method === "GET") {
 		if (!req.query.publicKey) {
