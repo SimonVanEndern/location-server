@@ -58,7 +58,7 @@ app.use(function (req, res, next) {
 		if (!req.query.pk) {
 			console.log("WARNING: No user specified on GET")
 			console.log("REQUEST:")
-			console.log(req)
+			console.log(req.query)
 		} else {
 			req.query.pk = req.query.pk.replace(/-/g, '+').replace(/_/g, '/').replace(/\+\+\+\+\+/g, '-----')
 			RequestHandling.updateUserTimestamp(req.query.pk)
