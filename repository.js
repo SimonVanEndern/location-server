@@ -281,6 +281,7 @@ function cleanUp () {
 		let query = {"completed": false, timestamp : {$lt : (new Date()).getTime() - 1000 * 60 * 60 * 18}}
 		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
 	}).then(requests => {
+		console.log("Found " + requests.length + " stale requests")
 		let pendingRequests = []
 		requests.forEach(ele => {
 			if (ele.previousRequest) {

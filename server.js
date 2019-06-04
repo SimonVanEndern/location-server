@@ -8,6 +8,9 @@ const Repository = require('./repository')
 const UserRepository = require('./userRepository')
 const RequestHandling = require('./requests')
 
+setTimeout(function () {
+	Repository.cleanUp()
+}, 1000 * 60)
 setInterval(function () {
 	Repository.cleanUp()
 }, 1000 * 60 * 60); 
