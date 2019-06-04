@@ -2,6 +2,17 @@ var exports = {}
 const Repository = require('./repository')
 let UserRepository = require('./userRepository')
 
+function sendUsers(req, res) {
+	UserRepository.getUsers().then(
+		result => {
+			res.set({
+				'Content-Type' : "text/json"
+			})
+			res.status(200).send(result)
+		}
+	).catch(err => {throw err})
+}
+
 function handleNewUserRequest(req, res) {
 	let pk = req.body.pk
 	if (!pk) {
@@ -171,5 +182,6 @@ exports.sendRequests = sendRequests
 exports.handleInsertSample = handleInsertSample
 exports.testing = testing
 exports.updateUserTimestamp = updateUserTimestamp
+exports.sendUsers = sendUsers
 
 module.exports = exports

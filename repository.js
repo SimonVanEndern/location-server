@@ -276,6 +276,7 @@ function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
 }
 
 function cleanUp () {
+	console.log("Cleaning up")
 	openDb().then(db => {
 		let query = {"completed": false, timestamp : {$lt : (new Date()).getTime() - 1000 * 60 * 60 * 18}}
 		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
@@ -283,8 +284,10 @@ function cleanUp () {
 		let pendingRequests = []
 		requests.forEach(ele => {
 			if (ele.previousRequest) {
+				let users = ele.user
+				users.shift()
 				let query = {"_id" : mongo.ObjectId(ele.previousRequest)}
-				let update = {$set : {"completed": false}}
+				let update = {$set : {"completed": false, "users": users}}
 				db.collection(DB_AGGREGATION_REQUESTS).updateOne(query, update).then(res => {
 					pendingRequests.push(db.collection(DB_AGGREGATION_REQUESTS).deleteOne({"_id": ele._id}))
 				})

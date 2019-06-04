@@ -71,6 +71,7 @@ app.use('/requests', authenticate)
 app.use('/forward', authenticate)
 
 app.get('/', RequestHandling.handleBasicGetRequest)
+app.get('/users', RequestHandling.sendUsers)
 app.get('/info', RequestHandling.sendAPIInfo)
 app.get('/aggregations', RequestHandling.sendAggregations)
 app.get('/stats', RequestHandling.sendStatistics)

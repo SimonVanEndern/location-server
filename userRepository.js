@@ -72,6 +72,15 @@ function getUsersPossibleForNewRequest () {
 	})
 }
 
+function getUsers () {
+	return openDb().then(db => {
+		return db.collection(DB_USER).find().toArray().then(users => {
+			users.forEach(user => {user.date = new Date(user.timestamp)})
+			return Promise.resolve(users)
+		})
+	})
+}
+
 function updateUserTimestamp (pk) {
 	openDb().then(db => {
 		let query = {"pk": pk}
@@ -100,5 +109,6 @@ module.exports = {
 	authenticateUser : authenticateUser,
 	removeAllUsers : removeAllUsers,
 	updateUserTimestamp : updateUserTimestamp,
-	getUsersPossibleForNewRequest: getUsersPossibleForNewRequest
+	getUsersPossibleForNewRequest: getUsersPossibleForNewRequest,
+	getUsers: getUsers
 }
