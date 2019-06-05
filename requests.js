@@ -69,8 +69,6 @@ function sendAggregations (req, res) {
 		res.set({
 			'Content-Type': 'text/json'
 		})
-		console.log("Sending result: ")
-		console.log(result)
 		res.status(200).send(result)
 	}).catch(error => {
 		throw err
