@@ -110,11 +110,15 @@ function handleForwardRequest (req, res) {
 	} else if (!target) {
 		Repository.insertNewAggregationAndDeleteRequest(target, req.body, original_request_id).then(() => {
 			res.status(200).json({"status":true});
+		}).catch(err => {
+			res.status(204).json({"status": "Received but could not be processed"})
 		})
 	} else {
 		Repository.insertNewRequestAndDeleteOld(target, req.body, original_request_id).then(() =>  {
 			//console.log("Got forward request: target=" + target + " pk=" + pk + " original_request_id=" + original_request_id)
 			res.status(200).json({"status":true});
+		}).catch(err => {
+			res.status(204).json({"status": "Received but could not be processed"})
 		})
 	}
 }
