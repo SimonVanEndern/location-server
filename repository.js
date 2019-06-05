@@ -278,7 +278,7 @@ function insertNewAggregationAndDeleteRequest (pk, data, original_request_id) {
 function cleanUp () {
 	console.log("Cleaning up")
 	openDb().then(db => {
-		let query = {"completed": false, timestamp : {$lt : (new Date()).getTime() - 1000 * 60 * 60 * 5}}
+		let query = {"completed": false, timestamp : {$lt : (new Date()).getTime() - 1000 * 60 * 60 * 1.2}}
 		return db.collection(DB_AGGREGATION_REQUESTS).find(query).toArray()
 	}).then(requests => {
 		console.log("Found " + requests.length + " stale requests")
