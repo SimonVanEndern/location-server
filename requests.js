@@ -25,6 +25,7 @@ function handleNewUserRequest(req, res) {
 			"password": user.password
 		})
 	}).catch(err => {
+		console.log("ERROR handling newUserRequest")
 		console.log(err)
 		res.status(400).end();
 	})
@@ -81,12 +82,14 @@ function handleForwardRequest (req, res) {
 		Repository.insertNewAggregationResultAndDeleteRequests(req.body).then(() => {
 			res.status(200).json({"status":true});
 		}).catch(err => {
+			console.log(err)
 			res.status(204).json({"status": "Received but could not be processed"})
 		})
 	} else {
 		Repository.insertNewAggregationRequest(req.body).then(() =>  {
 			res.status(200).json({"status":true});
 		}).catch(err => {
+			console.log(err)
 			res.status(204).json({"status": "Received but could not be processed"})
 		})
 	}
@@ -104,6 +107,7 @@ function sendRequests (req, res) {
 			res.status(200).send(result)
 		}
 	).catch(err => {
+		console.log("ERROR in sendReqeusts")
 		console.log(err)
 		res.status(500).end();
 	})

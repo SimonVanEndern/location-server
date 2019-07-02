@@ -77,7 +77,7 @@ function createAggregationResultIfPossible(request) {
 function insertAggregationResult(request) {
 	let resultToInsert = createAggregationResultIfPossible(request)
 	if (!resultToInsert) {
-		return Promise.reject("Could not create aggregation request, missing or wrong fields")
+		return Promise.reject("Could not create aggregation result, missing or wrong fields")
 	} else {
 		return openDb().then(db => {
 		 	 return db.collection(DB_AGGREGATION_RESULTS).insertOne(resultToInsert)

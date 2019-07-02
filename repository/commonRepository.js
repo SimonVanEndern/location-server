@@ -107,6 +107,8 @@ function insertNewAggregationRequest(request) {
 			return Promise.reject("No corresponding request found")
 		} else {
 			request.users = original[0].users
+			request.started_at = original[0].started_at
+			request.rawRequestId = original[0].rawRequestId
 			let newRequest = AggregationRequest.fromAggregationRequest(request)
 			return AggregationRequest.insert(newRequest)
 		}
@@ -132,6 +134,9 @@ function insertNewAggregationResultAndDeleteRequests (request) {
 		if (original.length != 1) {
 			return Promise.reject("No corresponding request found")
 		} else {
+			request.test = "TEST"
+			request.rawRequestId = original[0].rawRequestId
+			request.started_at = original[0].started_at
 			return AggregationResult.insert(request)
 		}
 	}).then(insertedResult => {

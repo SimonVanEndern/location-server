@@ -120,7 +120,7 @@ function createAggregationRequestFromAggregationRequestIfPossible (request) {
 	return createAggregationRequestIfPossible({
 		"rawRequestId": request.rawRequestId,
 		"started_at": request.started_at,
-		"previousRequest": request.previousRequest,
+		"previousRequest": request._id,
 		"publicKey" : request.nextUser,
 		"nextUser": request.users.length == 0 ? null : request.users.shift(),
 		"users" : request.users,
