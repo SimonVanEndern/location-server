@@ -143,7 +143,6 @@ describe('Requests', () => {
 			UserRepository.createUser(user2).then(createdUser2 => {
 				Repository.insertNewRawRequest(request).then(doc => {
 					doc.serverId = doc._id
-					delete doc._id
 					doc.password = createdUser2.password
 					/*request.serverId = doc._id
 					request.rawRequestId = doc
@@ -175,7 +174,7 @@ describe('Requests', () => {
 	})
 
 	describe('/POST forward aggregation result', () => {
-		it('it should insert a aggregation result', (done) => {
+		it('it should insert an aggregation result', (done) => {
 			let request = {
 				"start"  : "2019-01-01",
 				"end": "2019-01-02",
