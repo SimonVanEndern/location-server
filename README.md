@@ -1,24 +1,24 @@
 # Aggregation server
-This is a lightwight node.js server for working with an [Android App](https://github.com/SimonVanEndern/location-app) that collects location and movement data. The data is aggregated by the server in a decentralized manner and stored publicly available. 
+This is a lightwight node.js server for working with an [Android App](https://github.com/SimonVanEndern/location-app) that collects location and movement data. The data is aggregated by the server in a decentralized manner and stored publicly available. The corresponding [Research Project](https://github.com/SimonVanEndern/tum-thesis-latex) explains the functionality in more detail.
 
 ## Getting Started
-Run a mongoDB instance locally (via "service mongod start")
-Then run "npm install"
-Then run "npm start"
-This will start the server on port 8888 of your local machine
+Run a mongoDB instance locally (via "service mongod start").
+Then run "npm install".
+Then run "npm start".
+This will start the server on port 8888 of your local machine.
 
 ### Prerequisites
 You have to have node.js and mongoDB installed.
 
 ## Running the tests
-All tests can be run via "npm test"
+All tests can be run via "npm test".
 
 ###
 The tests are integration tests written against the API exposed by the Webserver.
 All background functionality is automatically tested with those tests.
 
 ## Deployment
-For deploying the server on a live system, one has to replace the IP address of the globally available MongoDB instance in the first line of [repository.js](repository.js)
+For deploying the server on a live system, one has to replace the IP address of the globally available MongoDB instance in the first line of all files in the [model folder](/model).
 
 ## Built with
 
