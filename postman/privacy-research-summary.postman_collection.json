@@ -1,0 +1,288 @@
+{
+	"info": {
+		"_postman_id": "875bb59a-05d8-4e5a-917c-4bc3cb168049",
+		"name": "privacy-research-summary",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Activity 0 Summary",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"request\": {\n        \"start\": \"{{firstDay}}\",\n        \"end\": \"{{today}}\",\n        \"type\": \"activity_0\",\n        \"valueList\": []\n    },\n    \"pk\": \"test\"\n}"
+				},
+				"url": {
+					"raw": "https://privacy-research-sweet-porcupine.eu-gb.mybluemix.net/admin/sampleRequest",
+					"protocol": "https",
+					"host": [
+						"privacy-research-sweet-porcupine",
+						"eu-gb",
+						"mybluemix",
+						"net"
+					],
+					"path": [
+						"admin",
+						"sampleRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Activity 1 Summary",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"request\": {\n        \"start\": \"{{firstDay}}\",\n        \"end\": \"{{today}}\",\n        \"type\": \"activity_1\",\n        \"valueList\": []\n    },\n    \"pk\": \"test\"\n}"
+				},
+				"url": {
+					"raw": "https://privacy-research-sweet-porcupine.eu-gb.mybluemix.net/admin/sampleRequest",
+					"protocol": "https",
+					"host": [
+						"privacy-research-sweet-porcupine",
+						"eu-gb",
+						"mybluemix",
+						"net"
+					],
+					"path": [
+						"admin",
+						"sampleRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Activity 2 Summary",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"request\": {\n        \"start\": \"{{firstDay}}\",\n        \"end\": \"{{today}}\",\n        \"type\": \"activity_2\",\n        \"valueList\": []\n    },\n    \"pk\": \"test\"\n}"
+				},
+				"url": {
+					"raw": "https://privacy-research-sweet-porcupine.eu-gb.mybluemix.net/admin/sampleRequest",
+					"protocol": "https",
+					"host": [
+						"privacy-research-sweet-porcupine",
+						"eu-gb",
+						"mybluemix",
+						"net"
+					],
+					"path": [
+						"admin",
+						"sampleRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Activity 7 Summary",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"request\": {\n        \"start\": \"{{firstDay}}\",\n        \"end\": \"{{today}}\",\n        \"type\": \"activity_7\",\n        \"valueList\": []\n    },\n    \"pk\": \"test\"\n}"
+				},
+				"url": {
+					"raw": "https://privacy-research-sweet-porcupine.eu-gb.mybluemix.net/admin/sampleRequest",
+					"protocol": "https",
+					"host": [
+						"privacy-research-sweet-porcupine",
+						"eu-gb",
+						"mybluemix",
+						"net"
+					],
+					"path": [
+						"admin",
+						"sampleRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Activity 8 Summary",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"request\": {\n        \"start\": \"{{firstDay}}\",\n        \"end\": \"{{today}}\",\n        \"type\": \"activity_8\",\n        \"valueList\": []\n    },\n    \"pk\": \"test\"\n}"
+				},
+				"url": {
+					"raw": "https://privacy-research-sweet-porcupine.eu-gb.mybluemix.net/admin/sampleRequest",
+					"protocol": "https",
+					"host": [
+						"privacy-research-sweet-porcupine",
+						"eu-gb",
+						"mybluemix",
+						"net"
+					],
+					"path": [
+						"admin",
+						"sampleRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Steps Summary",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"request\": {\n        \"start\": \"{{firstDay}}\",\n        \"end\": \"{{today}}\",\n        \"type\": \"steps\",\n        \"valueList\": []\n    },\n    \"pk\": \"test\"\n}"
+				},
+				"url": {
+					"raw": "https://privacy-research-sweet-porcupine.eu-gb.mybluemix.net/admin/sampleRequest",
+					"protocol": "https",
+					"host": [
+						"privacy-research-sweet-porcupine",
+						"eu-gb",
+						"mybluemix",
+						"net"
+					],
+					"path": [
+						"admin",
+						"sampleRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "StepsListing Summary",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"request\": {\n        \"start\": \"{{firstDay}}\",\n        \"end\": \"{{today}}\",\n        \"type\": \"stepsListing\",\n        \"valueList\": []\n    },\n    \"pk\": \"test\"\n}"
+				},
+				"url": {
+					"raw": "https://privacy-research-sweet-porcupine.eu-gb.mybluemix.net/admin/sampleRequest",
+					"protocol": "https",
+					"host": [
+						"privacy-research-sweet-porcupine",
+						"eu-gb",
+						"mybluemix",
+						"net"
+					],
+					"path": [
+						"admin",
+						"sampleRequest"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Trajectory Summary",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"request\": {\n        \"start\": \"{{firstDay}}\",\n        \"end\": \"{{today}}\",\n        \"type\": \"trajectory\",\n        \"valueList\": []\n    },\n    \"pk\": \"test\"\n}"
+				},
+				"url": {
+					"raw": "https://privacy-research-sweet-porcupine.eu-gb.mybluemix.net/admin/sampleRequest",
+					"protocol": "https",
+					"host": [
+						"privacy-research-sweet-porcupine",
+						"eu-gb",
+						"mybluemix",
+						"net"
+					],
+					"path": [
+						"admin",
+						"sampleRequest"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "81545bb5-f180-4954-8ea9-9e34727a0c9b",
+				"type": "text/javascript",
+				"exec": [
+					"pm.environment.set(\"today\", (new Date()).toISOString().slice(0,10))",
+					"pm.environment.set(\"firstDay\", \"2019-06-03\")"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "798a43a5-bd59-4630-9f5c-efb3eb96bb27",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
